@@ -1,0 +1,50 @@
+# Java class files
+*.class
+
+# Package files
+*.jar
+*.war
+*.ear
+
+# VS Code settings
+.vscode/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+out/
+
+# Eclipse
+.project
+.classpath
+.settings/
+bin/
+
+# MacOS
+.DS_Store
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+
+# Build directories
+build/
+target/
+
+# Temporary files
+*.tmp
+*.swp
+*.bak
+
+# Node/npm (if present)
+node_modules/
+
+# Python (if present)
+__pycache__/
+*.pyc
+
+# Ignore OneDrive sync files
+*.lnk
