@@ -1,13 +1,18 @@
 
+import java.awt.Color;
+
+
 
 public class Player {
-    private double x;         // Player's x position in pixels
-    private double y;         // Player's y position in pixels
-    private int health;       // Current health points
-    private int maxHealth;    // Maximum health points
-    private int damage;       // Damage dealt by the player
-    private double speed;     // Movement speed
-    private boolean isAlive;  // True if the player is alive
+    private double x;             // Player's x position in pixels
+    private double y;             // Player's y position in pixels
+    private int health;           // Current health points
+    private int maxHealth;        // Maximum health points
+    private int damage;           // Damage dealt by the player
+    private double speed;         // Movement speed
+    private boolean isAlive;      // True if the player is alive
+    private double tearsSize;     // Default projectile size
+    private Color projectileColor; // Color of the player's projectiles
 
     public Player(double x, double y, int maxHealth, int damage, double speed) {
         this.x = x;
@@ -17,6 +22,8 @@ public class Player {
         this.damage = damage;
         this.speed = speed;
         this.isAlive = true; // Player is alive when created
+        this.tearsSize = 8; // Default projectile size
+        this.projectileColor = Color.BLACK; // Default projectile color
     }
 
     // Applies damage to the player and updates alive state
@@ -37,13 +44,28 @@ public class Player {
     }
 
     // Heals the player, but does not exceed max health
-    public void heal(int amount) {
-        int nextHealth = health + amount;
+    public void heal() {
+        int nextHealth = this.health + 1;
         if (nextHealth > maxHealth) {
-            health = maxHealth;
+            this.health = maxHealth;
         } else {
-            health = nextHealth;
+            this.health = nextHealth;
         }
+    }
+
+    // Increases the player's damage
+    public void increaseDamage() {
+        this.damage ++;
+    }
+
+    // Increasses the player's speed
+    public void increaseSpeed() {
+        this.speed += 0.5; // Increase speed by a fixed amount
+    }
+
+    // Increases the player's tears size
+    public void increaseTearsSize() {
+        this.tearsSize += 0.5; // Increase tears size by a fixed amount
     }
 
     // Sets the player's position in pixels
@@ -79,5 +101,11 @@ public class Player {
     }
     public boolean isAlive() {
         return isAlive;
+    }
+    public double getTearsSize() {
+        return tearsSize;
+    }
+    public Color getProjectileColor() {
+        return projectileColor;
     }
 }

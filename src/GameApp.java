@@ -23,6 +23,7 @@ public class GameApp extends Application {
     // Cooldown for shooting
     private long lastShotTime = 0;
     private final long SHOT_COOLDOWN = 200_000_000; // 200ms in nanoseconds
+
     
     @Override
     public void start(Stage primaryStage){
@@ -76,6 +77,7 @@ public class GameApp extends Application {
                 if (!currentRoom.isCompleted() && currentRoom.getEnemies().isEmpty()) {
                     currentRoom.setDoorsClosed(false);
                     currentRoom.setCompleted(true);
+                    currentRoom.generateReward(); // Generate a reward for the room
                 }
 
                 // Check if player is hit by projectiles
@@ -83,9 +85,47 @@ public class GameApp extends Application {
 
                 // Remove projectiles that hit walls
                 projectileManager.removeOutOfBounds(currentRoom);
+                
+                Reward reward = currentRoom.getRewards();
+                if (reward != null) {
+                    // Interaction with rewards
+                    double dx = player.getX() - reward.getX();
+                    double dy = player.getY() - reward.getY();
+                    double distance = Math.hypot(dx, dy);
+
+                    if (distance < 15) { // If player is close enough to the reward
+                        System.err.println("[DEBUG] Player collected reward: " + reward.getType());
+                        switch (reward.getType()) {
+                            case HEALTH:
+                                player.heal();
+                                break;
+                            case DAMAGE:
+                                player.increaseDamage();
+                                break;
+                            case SPEED:
+                                player.increaseSpeed();
+                                break;
+                            case TEARS_SIZE:
+                                player.increaseTearsSize();
+                                break;
+                        }
+                        currentRoom.setRewards(null); // Remove the reward (it will no longer be displayed or collectible)
+                        
+                        // show player's stats in console
+                        System.err.println("[DEBUG] Player stats - Health: " + player.getHealth() +
+                                            ", Damage: " + player.getDamage() +
+                                            ", Speed: " + player.getSpeed() +
+                                            ", Tears Size: " + player.getTearsSize());
+                    }
+                    
+                }
+                
 
                 // Render everything (room, projectiles, enemies, UI)
                 roomRenderer.renderRoom(currentRoom, player.getX(), player.getY());
+                if (reward != null) {
+                    roomRenderer.renderRewards(reward);
+                }
                 projectileManager.render(roomRenderer.getGraphicsContext());
                 enemyManager.renderAll(roomRenderer.getGraphicsContext());
                 uiManager.render(player);
@@ -96,7 +136,7 @@ public class GameApp extends Application {
         // Create the main layout and add both canvases
         StackPane root = new StackPane(gameCanvas, uiManager.getCanvas());
         Scene scene = new Scene(root);
-        primaryStage.setTitle("Isaac-like Game");
+        primaryStage.setTitle("The Binding of Hugo");
         primaryStage.setScene(scene);
         primaryStage.show();
 
@@ -196,6 +236,9 @@ public class GameApp extends Application {
             // Determine actual exit direction based on player position
             Direction actualExitDirection = getActualExitDirection(player.getX(), player.getY());
 
+            // Clear projectiles when switching rooms
+            projectileManager.clearProjectiles();
+
             // Switch to the next room and reposition player
             gameMap.switchToNextRoom();
 
@@ -236,7 +279,7 @@ public class GameApp extends Application {
             player.getY(),
             player.getDamage(),
             2, // projectile speed
-            8, // projectile size
+            (int) player.getTearsSize(), // projectile size
             shootDirection,
             ProjectileOwner.PLAYER,   // Shot by player
             ProjectileTarget.ENEMY    // Targets enemies

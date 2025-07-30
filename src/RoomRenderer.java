@@ -73,6 +73,18 @@ public class RoomRenderer {
         gc.fillOval(playerX - playerSize/2, playerY - playerSize/2, playerSize, playerSize);
     }
 
+    // Renders rewards (e.g. hearts, coins) at the specified coordinates
+    public void renderRewards(Reward rewards) {
+        if (rewards == null) return;
+        switch (rewards.getType()) {
+            case HEALTH -> gc.setFill(Color.RED);
+            case DAMAGE -> gc.setFill(Color.BLUE);
+            case SPEED -> gc.setFill(Color.GREEN);
+            case TEARS_SIZE -> gc.setFill(Color.PURPLE);
+        }
+        gc.fillRect(rewards.getX() - TILE_SIZE/4, rewards.getY() - TILE_SIZE/4, TILE_SIZE/2, TILE_SIZE/2);
+    }
+
     // Returns the GraphicsContext for additional drawing (e.g. projectiles, enemies)
     public GraphicsContext getGraphicsContext() {
         return gc;

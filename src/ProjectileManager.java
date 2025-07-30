@@ -2,6 +2,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.paint.Color;
 
 /**
  * Manages all projectiles in the game.
@@ -10,9 +11,11 @@ import javafx.scene.canvas.GraphicsContext;
 public class ProjectileManager {
     private List<Projectile> projectiles;
     private static final int PLAYER_SIZE = 32; // Used for collision with player
+    private Color projectileColor; // Color of the projectiles
 
     public ProjectileManager() {
         this.projectiles = new ArrayList<>();
+        this.projectileColor = Color.BLACK;
     }
 
     // Adds a new projectile to the list
@@ -42,6 +45,7 @@ public class ProjectileManager {
     // Renders all projectiles
     public void render(GraphicsContext gc){
         for (Projectile p : projectiles) {
+            gc.setFill(projectileColor); // Use projectile's color
             gc.fillOval(p.getX() - p.getSize()/2, p.getY() - p.getSize()/2, p.getSize(), p.getSize());
         }
     }
@@ -70,6 +74,11 @@ public class ProjectileManager {
     // Returns a copy of the current list of projectiles (prevents external modification)
     public List<Projectile> getProjectiles() {
         return new ArrayList<>(projectiles); // return a copy to avoid external modification
+    }
+
+    // Clears all projectiles (used when entering a new room)
+    public void clearProjectiles() {
+        projectiles.clear();
     }
 
 

@@ -17,6 +17,7 @@ public class Room {
     private Set<Enemy> enemies;           // Set of enemies in this room
     private static final int ROOM_SIZE = 11; // Number of tiles per room (11x11)
     private static final int TILE_SIZE = 32; // Size of a tile in pixels
+    private Reward reward; // Set of rewards available in this room
 
     public Room(RoomType type, int x, int y) {
         this.type = type;
@@ -64,6 +65,15 @@ public class Room {
     public void addEnemy(Enemy enemy) {
         enemies.add(enemy);
     }
+
+    public Reward getRewards() {
+        return reward;
+    }
+    public void setRewards(Reward reward) {
+        this.reward = reward;
+    }
+
+
 
     // DOORS
 
@@ -122,5 +132,24 @@ public class Room {
     // Sets the room as completed (all enemies defeated)
     public void setCompleted(boolean completed){
         this.isCompleted = completed;
+        
+    }
+
+    // REWARDS
+
+    // Generate a random reward for this room
+        public Reward generateReward() {
+        int randomNum = (int) (Math.random() * 100);
+        if (randomNum < 65) {
+            reward = new Reward(RewardType.HEALTH);
+        } else if (randomNum < 85) {
+            reward = new Reward(RewardType.SPEED);
+        } else if (randomNum < 99) {
+            reward = new Reward(RewardType.TEARS_SIZE);
+        } else {
+            reward = new Reward(RewardType.DAMAGE);
+        }
+        reward.setPosition(); // Set position for rendering 
+        return reward;
     }
 }
