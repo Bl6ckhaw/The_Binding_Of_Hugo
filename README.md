@@ -8,8 +8,8 @@ Explore des salles générées aléatoirement, affronte des ennemis et des boss,
 
 ## 🕹️ Comment jouer
 
-- **Déplacements** : Flèches directionnelles (↑ ↓ ← →)
-- **Tirer** : Barre d’espace ou touches dédiées (selon configuration)
+- **Déplacements** : Avancer [Z] ; Reculer [S] ; Gauche [Q] ; Droite [D]
+- **Tirer** : Flèches directionnelles (↑ ↓ ← →)
 - **Objectif** : Élimine tous les ennemis de chaque salle, récupère des récompenses, et bats le boss final !
 - **HUD** : En haut à gauche, tu vois ta vie, tes dégâts, ta vitesse et la taille de tes projectiles.
 
@@ -65,7 +65,6 @@ The_Binding_Of_Hugo/
 ├── out/                  # Fichiers compilés (.class)
 ├── dist/                 # Installeur généré par jpackage
 ├── TheBindingOfHugo.jar  # Archive exécutable du jeu
-├── icon.ico              # Icône du jeu (optionnel)
 └── README.md
 ```
 
