@@ -30,7 +30,7 @@ public class Player {
     public void takeDamage(int dmg) {
         if (isAlive) {
             int nextHealth = health - dmg;
-            if (nextHealth < 0) {
+            if (nextHealth <= 0) {
                 health = 0; // Ensure health doesn't go below zero
                 isAlive = false; // Player is dead
             } else {
@@ -38,8 +38,6 @@ public class Player {
             }
         } else {
             System.out.println("Player is already dead and cannot take more damage.");
-            // Quit application (for the moment)
-            System.exit(0);
         }
     }
 

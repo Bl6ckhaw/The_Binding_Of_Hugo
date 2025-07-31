@@ -19,17 +19,22 @@ public class EnemyManager {
     }
 
     // Updates all enemies (AI, movement, etc.)
-    public void updateAll(Player player) {
+    public void updateAll(Player player, ProjectileManager projectileManager, GameMap gameMap) {
         for (Enemy enemy : enemies) {
-            enemy.update(player);
+            // If the enemy is a BossEnemy, call its specific update method
+            if (enemy instanceof BossEnemy boss) {
+                boss.update(player, projectileManager, this, gameMap);
+            } else {
+                enemy.update(player);
+            }
         }
     }
 
     // Renders all alive enemies
-    public void renderAll(GraphicsContext gc) {
+    public void renderAll(GraphicsContext gc, double tileSize, double offsetX, double offsetY) {
         for (Enemy enemy : enemies) {
             if (enemy.isAlive()) {
-                enemy.render(gc);
+                enemy.render(gc, tileSize, offsetX, offsetY);
             }
         }
     }

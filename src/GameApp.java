@@ -2,10 +2,15 @@ import java.util.HashSet;
 import java.util.Set;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 
 public class GameApp extends Application {
@@ -16,6 +21,7 @@ public class GameApp extends Application {
     private ProjectileManager projectileManager; // Instance to manage projectiles
     private EnemyManager enemyManager; // Instance to manage enemies
     private UIManager uiManager; // Instance to manage UI
+
     
     // Set to manage multiple key presses
     private Set<KeyCode> pressedKeys = new HashSet<>();
@@ -24,20 +30,49 @@ public class GameApp extends Application {
     private long lastShotTime = 0;
     private final long SHOT_COOLDOWN = 200_000_000; // 200ms in nanoseconds
 
-    
+    // Screen dimensions for fullscreen
+    private double screenWidth = Screen.getPrimary().getBounds().getWidth();
+    private double screenHeight = Screen.getPrimary().getBounds().getHeight();
+
     @Override
-    public void start(Stage primaryStage){
+    public void start(Stage primaryStage) {
+        showMenu(primaryStage);
+    }
+
+    private void showMenu(Stage primaryStage) {
+        StackPane menuRoot = new StackPane();
+        menuRoot.setStyle("-fx-background-color: #222;");
+        Label title = new Label("The Binding of Hugo");
+        title.setStyle("-fx-text-fill: white; -fx-font-size: 36px;");
+        Button startBtn = new Button("Jouer");
+        startBtn.setStyle("-fx-font-size: 20px;");
+        Button exitBtn = new Button("Quit");
+        exitBtn.setStyle("-fx-font-size: 20px;");
+        VBox vbox = new VBox(30, title, startBtn, exitBtn);
+        vbox.setAlignment(Pos.CENTER);
+        menuRoot.getChildren().add(vbox);
+    
+        Scene menuScene = new Scene(menuRoot, 800, 600);
+        primaryStage.setScene(menuScene);
+        primaryStage.setFullScreen(true);
+        primaryStage.show();
+    
+        startBtn.setOnAction(e -> startGame(primaryStage));
+        exitBtn.setOnAction(e -> primaryStage.close());
+    }
+
+    public void startGame(Stage primaryStage){
 
         // Create a canvas for game rendering
-        Canvas gameCanvas = new Canvas();
+        Canvas gameCanvas = new Canvas(screenWidth, screenHeight);
         // Create UI overlay canvas
-        Canvas uiCanvas = new Canvas();
+        Canvas uiCanvas = new Canvas(screenWidth, screenHeight);
 
         // Renderer for rooms
         this.roomRenderer = new RoomRenderer(gameCanvas);
 
         // Initialize UIManager (for health bar, etc.)
-        this.uiManager = new UIManager(gameCanvas.getWidth(), gameCanvas.getHeight());
+        this.uiManager = new UIManager(screenWidth, screenHeight);
 
         // Initialize player position (center of room)
         this.player = new Player(5 * 32 + 16, 5 * 32 + 16, 6, 1, 1.0);
@@ -55,6 +90,11 @@ public class GameApp extends Application {
         AnimationTimer gameLoop = new AnimationTimer() {
             @Override
             public void handle(long now) {
+                if (!player.isAlive()) {
+                    this.stop(); // stop the game loop before changing scene
+                    javafx.application.Platform.runLater(() -> showMenu(primaryStage));
+                    return;
+                }
                 // Handle continuous movement
                 handleContinuousInput();
 
@@ -65,7 +105,7 @@ public class GameApp extends Application {
                 projectileManager.updateAll();
 
                 // Update all enemies (AI, movement, etc.)
-                enemyManager.updateAll(player);
+                enemyManager.updateAll(player, projectileManager, gameMap);
                 enemyManager.checkProjectileCollisions(projectileManager);
                 enemyManager.removeDeadEnemies();
 
@@ -119,15 +159,22 @@ public class GameApp extends Application {
                     }
                     
                 }
-                
+
+                double width = gameCanvas.getWidth();
+                double height = gameCanvas.getHeight();
+                double tileSize = Math.min(width, height) / 11.0;
+                double offsetX = (width - tileSize * 11) / 2;
+                double offsetY = (height - tileSize * 11) / 2;
+
+                               
 
                 // Render everything (room, projectiles, enemies, UI)
                 roomRenderer.renderRoom(currentRoom, player.getX(), player.getY());
                 if (reward != null) {
                     roomRenderer.renderRewards(reward);
                 }
-                projectileManager.render(roomRenderer.getGraphicsContext());
-                enemyManager.renderAll(roomRenderer.getGraphicsContext());
+                projectileManager.render(roomRenderer.getGraphicsContext(), tileSize, offsetX, offsetY);
+                enemyManager.renderAll(roomRenderer.getGraphicsContext(), tileSize, offsetX, offsetY);
                 uiManager.render(player);
             }
         };
@@ -138,6 +185,7 @@ public class GameApp extends Application {
         Scene scene = new Scene(root);
         primaryStage.setTitle("The Binding of Hugo");
         primaryStage.setScene(scene);
+        primaryStage.setFullScreen(true); // Fullscreen mode
         primaryStage.show();
 
         // Handle key events for player movement
@@ -244,10 +292,14 @@ public class GameApp extends Application {
 
             // Load the new room's enemies into the EnemyManager
             Room newRoom = gameMap.getCurrentRoom();
+            // Ajoute le boss si c'est une salle boss et qu'il n'y en a pas déjà
+            if (newRoom.getType() == RoomType.BOSS && newRoom.getEnemies().stream().noneMatch(e -> e instanceof BossEnemy)) {
+                newRoom.addEnemy(new BossEnemy(5 * 32 + 16, 5 * 32 + 16));
+            }
             enemyManager.setEnemies(new java.util.ArrayList<>(newRoom.getEnemies()));
 
             // Isaac-like: close doors if room is not clear (except start/boss)
-            if (!newRoom.isCompleted() && newRoom.getType() == RoomType.NORMAL) {
+            if (!newRoom.isCompleted() && (newRoom.getType() == RoomType.NORMAL || newRoom.getType() == RoomType.BOSS)) {
                 newRoom.setDoorsClosed(true);
             } else {
                 newRoom.setDoorsClosed(false);

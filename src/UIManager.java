@@ -31,6 +31,9 @@ public class UIManager {
 
         // Draw the health bar
         drawHealthBar(player);
+
+        // Draw player stats
+        drawPlayerStat(player);
     }
 
     // Draws the player's health bar as a row of hearts
@@ -53,6 +56,17 @@ public class UIManager {
             gc.fillOval(heartX, startY, HEART_SIZE, HEART_SIZE);
         }
     }
+
+    // Show all player stats in the UI
+    public void drawPlayerStat(Player player) {
+        gc.setFill(Color.BLUE);
+        gc.fillText("Damage: " + player.getDamage(), 10, 40);
+        gc.setFill(Color.GREEN);
+        gc.fillText("Speed: " + player.getSpeed(), 10, 60);
+        gc.setFill(Color.PURPLE);
+        gc.fillText("Tears Size: " + player.getTearsSize(), 10, 80);
+    }
+
 
     // Returns the UI canvas for display
     public Canvas getCanvas() {

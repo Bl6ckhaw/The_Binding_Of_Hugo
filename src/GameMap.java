@@ -24,9 +24,10 @@ public class GameMap {
 
     // Initializes all rooms and generates enemies for normal rooms
     private void initializeRooms() {
-        for (int i = 0; i < GRID_SIZE; i++){
-            for (int j = 0; j < GRID_SIZE; j++){
-                if (i == 0 && j == 0){
+        // Create all rooms
+        for (int i = 0; i < GRID_SIZE; i++) {
+            for (int j = 0; j < GRID_SIZE; j++) {
+                if (i == 0 && j == 0) {
                     grid[i][j] = new Room(RoomType.START, i, j);
                     startRoom = grid[i][j];
                 } else if (i == GRID_SIZE - 1 && j == GRID_SIZE - 1) {
@@ -34,7 +35,7 @@ public class GameMap {
                     bossRoom = grid[i][j];
                 } else {
                     grid[i][j] = new Room(RoomType.NORMAL, i, j);
-                    // Generate a random number of enemies for each normal room
+                    // Generate random enemies for normal rooms
                     int min = 2, max = 5;
                     int nbEnemies = min + (int)(Math.random() * (max - min + 1));
                     for (int n = 0; n < nbEnemies; n++) {
@@ -42,19 +43,56 @@ public class GameMap {
                         grid[i][j].addEnemy(e);
                     }
                 }
+            }
+        }
+        // Connect rooms (doors) after all rooms exist
+        for (int i = 0; i < GRID_SIZE; i++) {
+            for (int j = 0; j < GRID_SIZE; j++) {
                 connectRooms(i, j);
             }
         }
     }
 
-    // Adds doors between adjacent rooms
+    // Adds doors between rooms following a serpentin path
     private void connectRooms(int i, int j) {
         Room room = grid[i][j];
-        // i = X (horizontal), j = Y (vertical)
-        if (j > 0) room.addDoor(Direction.NORTH); // Connect to room above (j-1)
-        if (j < GRID_SIZE - 1) room.addDoor(Direction.SOUTH); // Connect to room below (j+1)
-        if (i > 0) room.addDoor(Direction.WEST); // Connect to room to the left (i-1)
-        if (i < GRID_SIZE - 1) room.addDoor(Direction.EAST); // Connect to room to the right (i+1)
+        // even's line (0, 2, ...) : goes to the right
+        // odd's line (1, ...) : goes to the left
+        if (j % 2 == 0) {
+            // even's line : goes to the right
+            if (i < GRID_SIZE - 1) {
+                // Not at the right end, door to the east
+                room.addDoor(Direction.EAST);
+            } else if (j < GRID_SIZE - 1) {
+                // At the right end, not last row, door to the south
+                room.addDoor(Direction.SOUTH);
+            }
+        } else {
+            // odd's line : goes to the left
+            if (i > 0) {
+                // Not at the left end, door to the west
+                room.addDoor(Direction.WEST);
+            } else if (j < GRID_SIZE - 1) {
+                // At the left end, not last row, door to the south
+                room.addDoor(Direction.SOUTH);
+            }
+        }
+        // For the next room, we also need to add the opposite door
+        // (to make the path bidirectional)
+        // adding the opposite door in the neighboring room
+        if (j % 2 == 0) {
+            if (i < GRID_SIZE - 1) {
+                grid[i + 1][j].addDoor(Direction.WEST);
+            } else if (j < GRID_SIZE - 1) {
+                grid[i][j + 1].addDoor(Direction.NORTH);
+            }
+        } else {
+            if (i > 0) {
+                grid[i - 1][j].addDoor(Direction.EAST);
+            } else if (j < GRID_SIZE - 1) {
+                grid[i][j + 1].addDoor(Direction.NORTH);
+            }
+        }
     }
 
     // Checks if the player can move in the given direction (is there a door?)

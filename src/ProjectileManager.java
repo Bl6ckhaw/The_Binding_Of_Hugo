@@ -43,10 +43,13 @@ public class ProjectileManager {
     }
 
     // Renders all projectiles
-    public void render(GraphicsContext gc){
+    public void render(GraphicsContext gc, double tileSize, double offsetX, double offsetY) {
         for (Projectile p : projectiles) {
-            gc.setFill(projectileColor); // Use projectile's color
-            gc.fillOval(p.getX() - p.getSize()/2, p.getY() - p.getSize()/2, p.getSize(), p.getSize());
+            double x = offsetX + (p.getX() / (11 * 32)) * (tileSize * 11);
+            double y = offsetY + (p.getY() / (11 * 32)) * (tileSize * 11);
+            double size = (p.getSize() / 32.0) * tileSize; // taille relative à une tuile
+            gc.setFill(p.getOwner() == ProjectileOwner.PLAYER ? Color.BLACK : Color.ORANGE);
+            gc.fillOval(x - size/2, y - size/2, size, size);
         }
     }
 

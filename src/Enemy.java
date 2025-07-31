@@ -1,4 +1,5 @@
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.paint.Color;
 
 /**
  * Abstract base class for all enemies.
@@ -24,7 +25,13 @@ public abstract class Enemy {
     public abstract void update(Player player);
 
     // Render the enemy on the canvas
-    public abstract void render(GraphicsContext gc);
+    public void render(GraphicsContext gc, double tileSize, double offsetX, double offsetY) {
+        double x = offsetX + (getX() / (11 * 32)) * (tileSize * 11);
+        double y = offsetY + (getY() / (11 * 32)) * (tileSize * 11);
+        double size = tileSize * 0.8; // exemple : 80% d'une tuile
+        gc.setFill(Color.DARKRED);
+        gc.fillOval(x - size/2, y - size/2, size, size);
+    }
 
     // Apply damage to the enemy and update alive state
     public void takeDamage(int damage) {

@@ -49,11 +49,14 @@ public class Follower extends Enemy {
     }
 
     @Override
-    public void render(GraphicsContext gc) {
+    public void render(GraphicsContext gc, double tileSize, double offsetX, double offsetY) {
         if (isAlive) {
+            double dx = offsetX + (getX() / (11 * 32)) * (tileSize * 11);
+            double dy = offsetY + (getY() / (11 * 32)) * (tileSize * 11);
+            double size = tileSize * 0.8; // Example: 80% of a tile
             Color followerColor = Color.PURPLE;
             gc.setFill(followerColor);
-            gc.fillOval(x - SIZE / 2, y - SIZE / 2, SIZE, SIZE); // Centered drawing
+            gc.fillOval(dx - size / 2, dy - size / 2, size, size); // Centered drawing
         }
     }
 

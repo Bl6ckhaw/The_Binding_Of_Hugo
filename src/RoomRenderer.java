@@ -15,8 +15,6 @@ public class RoomRenderer {
     public RoomRenderer(Canvas canvas){
         this.canvas = canvas;
         this.gc = canvas.getGraphicsContext2D();
-        this.canvas.setWidth(ROOM_SIZE * TILE_SIZE);
-        this.canvas.setHeight(ROOM_SIZE * TILE_SIZE);
     }
 
     /**
@@ -25,64 +23,92 @@ public class RoomRenderer {
     public void renderRoom(Room room, double playerX, double playerY) {
         gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
 
-        // Draw the floor
+        // change background color
+        gc.setFill(Color.DARKGRAY); 
+        gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
+
+        double width = canvas.getWidth();
+        double height = canvas.getHeight();
+
+        // Tile size to keep the room square and fill the screen
+        double tileSize = Math.min(width, height) / ROOM_SIZE;
+
+        // Offset to center the room
+        double offsetX = (width - tileSize * ROOM_SIZE) / 2;
+        double offsetY = (height - tileSize * ROOM_SIZE) / 2;
+
+        // Floor (centered square)
         Color floorColor = room.getType() == RoomType.START ? Color.LIGHTBLUE : 
                           room.getType() == RoomType.BOSS ? Color.DARKBLUE : 
                           Color.WHITE;
         gc.setFill(floorColor);
-        gc.fillRect(1, 1, canvas.getWidth() - 1, canvas.getHeight() - 1);
+        gc.fillRect(offsetX, offsetY, tileSize * ROOM_SIZE, tileSize * ROOM_SIZE);
 
-        // Draw the walls
+        // Walls
         Color wallColor = Color.YELLOW;
         gc.setFill(wallColor);
-        gc.fillRect(0, 0, canvas.getWidth(), TILE_SIZE); // Top wall
-        gc.fillRect(0, canvas.getHeight() - TILE_SIZE, canvas.getWidth(), TILE_SIZE); // Bottom wall
-        gc.fillRect(0, 0, TILE_SIZE, canvas.getHeight()); // Left wall
-        gc.fillRect(canvas.getWidth() - TILE_SIZE, 0, TILE_SIZE, canvas.getHeight()); // Right wall
+        gc.fillRect(offsetX, offsetY, tileSize * ROOM_SIZE, tileSize); // Haut
+        gc.fillRect(offsetX, offsetY + tileSize * (ROOM_SIZE - 1), tileSize * ROOM_SIZE, tileSize); // Bas
+        gc.fillRect(offsetX, offsetY, tileSize, tileSize * ROOM_SIZE); // Gauche
+        gc.fillRect(offsetX + tileSize * (ROOM_SIZE - 1), offsetY, tileSize, tileSize * ROOM_SIZE); // Droite
 
-        // Draw the doors (red if closed, green if open)
+        // Doors
         Color doorColor = room.areDoorsClosed() ? Color.RED : Color.GREEN;
         for (Direction dir : room.getDirections()) {
             switch (dir) {
                 case NORTH -> {
                     gc.setFill(doorColor);
-                    gc.fillRect(DOOR_POSITION * TILE_SIZE, 0, TILE_SIZE, TILE_SIZE);
+                    gc.fillRect(offsetX + DOOR_POSITION * tileSize, offsetY, tileSize, tileSize);
                 }
                 case SOUTH -> {
                     gc.setFill(doorColor);
-                    gc.fillRect(DOOR_POSITION * TILE_SIZE, (ROOM_SIZE-1) * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                    gc.fillRect(offsetX + DOOR_POSITION * tileSize, offsetY + (ROOM_SIZE - 1) * tileSize, tileSize, tileSize);
                 }
                 case EAST -> {
                     gc.setFill(doorColor);
-                    gc.fillRect((ROOM_SIZE-1) * TILE_SIZE, DOOR_POSITION * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                    gc.fillRect(offsetX + (ROOM_SIZE - 1) * tileSize, offsetY + DOOR_POSITION * tileSize, tileSize, tileSize);
                 }
                 case WEST -> {
                     gc.setFill(doorColor);
-                    gc.fillRect(0, DOOR_POSITION * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                    gc.fillRect(offsetX, offsetY + DOOR_POSITION * tileSize, tileSize, tileSize);
                 }
             }
         }
-        renderPlayer(playerX, playerY);
+        // Adapt player position to room scale
+        renderPlayer(offsetX + (playerX / (ROOM_SIZE * 32)) * (tileSize * ROOM_SIZE),
+                     offsetY + (playerY / (ROOM_SIZE * 32)) * (tileSize * ROOM_SIZE),
+                     tileSize, tileSize);
     }
 
     // Draws the player at the given coordinates
-    public void renderPlayer(double playerX, double playerY){
+    public void renderPlayer(double playerX, double playerY, double tileWidth, double tileHeight){
         Color playerColor = Color.BLACK;
         gc.setFill(playerColor);
-        int playerSize = TILE_SIZE/2;
+        double playerSize = Math.min(tileWidth, tileHeight) / 2;
         gc.fillOval(playerX - playerSize/2, playerY - playerSize/2, playerSize, playerSize);
     }
 
     // Renders rewards (e.g. hearts, coins) at the specified coordinates
     public void renderRewards(Reward rewards) {
         if (rewards == null) return;
+        double width = canvas.getWidth();
+        double height = canvas.getHeight();
+        int ROOM_SIZE = 11;
+        double tileSize = Math.min(width, height) / ROOM_SIZE;
+        double offsetX = (width - tileSize * ROOM_SIZE) / 2;
+        double offsetY = (height - tileSize * ROOM_SIZE) / 2;
+
+        // Position reward en pixels salle
+        double rewardX = offsetX + (rewards.getX() / (ROOM_SIZE * 32)) * (tileSize * ROOM_SIZE);
+        double rewardY = offsetY + (rewards.getY() / (ROOM_SIZE * 32)) * (tileSize * ROOM_SIZE);
+
         switch (rewards.getType()) {
             case HEALTH -> gc.setFill(Color.RED);
             case DAMAGE -> gc.setFill(Color.BLUE);
             case SPEED -> gc.setFill(Color.GREEN);
             case TEARS_SIZE -> gc.setFill(Color.PURPLE);
         }
-        gc.fillRect(rewards.getX() - TILE_SIZE/4, rewards.getY() - TILE_SIZE/4, TILE_SIZE/2, TILE_SIZE/2);
+        gc.fillRect(rewardX - tileSize/4, rewardY - tileSize/4, tileSize/2, tileSize/2);
     }
 
     // Returns the GraphicsContext for additional drawing (e.g. projectiles, enemies)
