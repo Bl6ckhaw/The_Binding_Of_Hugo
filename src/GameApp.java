@@ -46,19 +46,33 @@ public class GameApp extends Application {
         title.setStyle("-fx-text-fill: white; -fx-font-size: 36px;");
         Button startBtn = new Button("Jouer");
         startBtn.setStyle("-fx-font-size: 20px;");
+        Button editMapBtn = new Button("Edit Map"); 
+        editMapBtn.setStyle("-fx-font-size: 20px;"); 
         Button exitBtn = new Button("Quit");
         exitBtn.setStyle("-fx-font-size: 20px;");
-        VBox vbox = new VBox(30, title, startBtn, exitBtn);
+        VBox vbox = new VBox(30, title, startBtn, editMapBtn, exitBtn);
         vbox.setAlignment(Pos.CENTER);
         menuRoot.getChildren().add(vbox);
-    
+
         Scene menuScene = new Scene(menuRoot, 800, 600);
         primaryStage.setScene(menuScene);
         primaryStage.setFullScreen(true);
         primaryStage.show();
-    
+
         startBtn.setOnAction(e -> startGame(primaryStage));
+        // open the map editor in a new window
+        editMapBtn.setOnAction(e -> {
+            try {
+                GameMapEditorApp editor = new GameMapEditorApp();
+                Stage editorStage = new Stage();
+                editor.start(editorStage);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        });
+
         exitBtn.setOnAction(e -> primaryStage.close());
+    
     }
 
     public void startGame(Stage primaryStage){
@@ -85,6 +99,8 @@ public class GameApp extends Application {
 
         // Manages all enemies in the current room
         this.enemyManager = new EnemyManager();
+
+        
 
         // Main game loop (AnimationTimer)
         AnimationTimer gameLoop = new AnimationTimer() {
@@ -193,6 +209,8 @@ public class GameApp extends Application {
         scene.setOnKeyReleased(event -> pressedKeys.remove(event.getCode()));
 
     }
+
+    
     
     // Handles continuous movement input (WASD/ZQSD)
     private void handleContinuousInput() {

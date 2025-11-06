@@ -21,8 +21,8 @@ public abstract class Enemy {
         this.isAlive = true;
     }
 
-    // Update enemy logic (AI, movement, etc.)
-    public abstract void update(Player player);
+    // Abstract method to update enemy state - signature corrigée pour correspondre aux classes filles
+    public abstract void update(Player player, ProjectileManager projectileManager, GameMap gameMap);
 
     // Render the enemy on the canvas
     public void render(GraphicsContext gc, double tileSize, double offsetX, double offsetY) {
@@ -46,4 +46,5 @@ public abstract class Enemy {
     public double getY() { return y; }
     public int getDamage() { return damage; }
     public boolean isAlive() { return isAlive; }
+    public int getHealth() { return health; } // Ajouté pour BossEnemy
 }

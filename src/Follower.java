@@ -17,7 +17,7 @@ public class Follower extends Enemy {
     }
 
     @Override
-    public void update(Player player) {
+    public void update(Player player, ProjectileManager projectileManager, GameMap gameMap) {
         if (isAlive) {
             // Calculate direction to the player
             double deltaX = player.getX() - this.x;

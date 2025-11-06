@@ -5,24 +5,24 @@ public class BossEnemy extends Enemy {
     private int attackCooldown = 0;
     private static final int MAX_COOLDOWN = 90; 
 
+
+
     public BossEnemy(double x, double y) {
         super(x, y, 50, 5, 0); // Beaucoup de vie, gros dégâts, vitesse nulle (statique)
     }
 
     
     @Override
-    public void update(Player player) {}
-
-    public void update(Player player, ProjectileManager projectileManager, EnemyManager enemyManager, GameMap gameMap) {
-    if (attackCooldown > 0) {
-        attackCooldown--;
-    } else {
-        shootPattern(projectileManager, enemyManager, gameMap);
-        attackCooldown = MAX_COOLDOWN;
+    public void update(Player player, ProjectileManager projectileManager, GameMap gameMap) {
+        if (attackCooldown > 0) {
+            attackCooldown--;
+        } else {
+            shootPattern(projectileManager, gameMap);
+            attackCooldown = MAX_COOLDOWN;
+        }
     }
-}
 
-    private void shootPattern(ProjectileManager projectileManager, EnemyManager enemyManager, GameMap gameMap) {
+    private void shootPattern(ProjectileManager projectileManager, GameMap gameMap) {
     int pattern = (int) (Math.random() * 3); 
         switch (pattern) {
             case 0, 1:
@@ -57,7 +57,5 @@ public class BossEnemy extends Enemy {
         gc.strokeRect(x - size/2, y - size/2 - 10, size, 8);
     }
 
-    private double getHealth() {
-        return this.health;
-    }
+    
 }

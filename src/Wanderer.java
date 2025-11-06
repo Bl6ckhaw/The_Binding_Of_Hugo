@@ -22,7 +22,7 @@ public class Wanderer extends Enemy {
     }
 
     @Override
-    public void update(Player player) {
+    public void update(Player player, ProjectileManager projectileManager, GameMap gameMap) {
         if (isAlive) {
             long currentTime = System.nanoTime();
             // Change direction periodically

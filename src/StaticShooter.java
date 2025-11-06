@@ -23,7 +23,7 @@ public class StaticShooter extends Enemy {
     }
 
     @Override
-    public void update(Player player) {
+    public void update(Player player, ProjectileManager projectileManager, GameMap gameMap) {
         if (isAlive){
             // Shoot if perfectly aligned horizontally or vertically (with 10px tolerance)
             double deltaX = Math.abs(this.x - player.getX());

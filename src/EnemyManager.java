@@ -21,12 +21,7 @@ public class EnemyManager {
     // Updates all enemies (AI, movement, etc.)
     public void updateAll(Player player, ProjectileManager projectileManager, GameMap gameMap) {
         for (Enemy enemy : enemies) {
-            // If the enemy is a BossEnemy, call its specific update method
-            if (enemy instanceof BossEnemy boss) {
-                boss.update(player, projectileManager, this, gameMap);
-            } else {
-                enemy.update(player);
-            }
+            enemy.update(player, projectileManager, gameMap);
         }
     }
 

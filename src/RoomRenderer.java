@@ -44,14 +44,8 @@ public class RoomRenderer {
         gc.setFill(floorColor);
         gc.fillRect(offsetX, offsetY, tileSize * ROOM_SIZE, tileSize * ROOM_SIZE);
 
-        // Walls
-        Color wallColor = Color.YELLOW;
-        gc.setFill(wallColor);
-        gc.fillRect(offsetX, offsetY, tileSize * ROOM_SIZE, tileSize); // Haut
-        gc.fillRect(offsetX, offsetY + tileSize * (ROOM_SIZE - 1), tileSize * ROOM_SIZE, tileSize); // Bas
-        gc.fillRect(offsetX, offsetY, tileSize, tileSize * ROOM_SIZE); // Gauche
-        gc.fillRect(offsetX + tileSize * (ROOM_SIZE - 1), offsetY, tileSize, tileSize * ROOM_SIZE); // Droite
-
+        renderWalls(room, tileSize, offsetX, offsetY);
+        
         // Doors
         Color doorColor = room.areDoorsClosed() ? Color.RED : Color.GREEN;
         for (Direction dir : room.getDirections()) {
@@ -78,6 +72,27 @@ public class RoomRenderer {
         renderPlayer(offsetX + (playerX / (ROOM_SIZE * 32)) * (tileSize * ROOM_SIZE),
                      offsetY + (playerY / (ROOM_SIZE * 32)) * (tileSize * ROOM_SIZE),
                      tileSize, tileSize);
+    }
+
+    public void renderWalls(Room room, double tileSize, double offsetX, double offsetY){
+
+        // Walls around the room
+        Color wallColor = Color.YELLOW;
+        gc.setFill(wallColor);
+        gc.fillRect(offsetX, offsetY, tileSize * ROOM_SIZE, tileSize); // Haut
+        gc.fillRect(offsetX, offsetY + tileSize * (ROOM_SIZE - 1), tileSize * ROOM_SIZE, tileSize); // Bas
+        gc.fillRect(offsetX, offsetY, tileSize, tileSize * ROOM_SIZE); // Gauche
+        gc.fillRect(offsetX + tileSize * (ROOM_SIZE - 1), offsetY, tileSize, tileSize * ROOM_SIZE); // Droite
+
+        // Interior walls
+        gc.setFill(Color.GRAY);
+        for (Wall wall : room.getWalls()) {
+            double wx = offsetX + wall.getX() * tileSize;
+            double wy = offsetY + wall.getY() * tileSize;
+            double wW = wall.getWidth() * tileSize;
+            double wH = wall.getHeight() * tileSize;
+            gc.fillRect(wx, wy, wW, wH);
+        }
     }
 
     // Draws the player at the given coordinates

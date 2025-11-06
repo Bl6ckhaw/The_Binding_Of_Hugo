@@ -1,0 +1,6 @@
+type:NORMAL
+doors:NORTH,SOUTH
+wall:4,8,1,1
+wall:3,6,1,1
+wall:3,4,1,1
+wall:7,6,1,1
