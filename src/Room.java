@@ -10,6 +10,7 @@ import java.util.Set;
  * Stores its type, doors, enemies, and completion/door state.
  */
 public class Room {
+    private static final boolean TEST_DISABLE_NORMAL_ENEMIES = true;
     private RoomType type;                // Room type (START, NORMAL, BOSS)
     private Set<Direction> directions;    // Directions where doors exist
     private int x;                        // Room's grid X coordinate
@@ -20,6 +21,7 @@ public class Room {
     private static final int ROOM_SIZE = 11; // Number of tiles per room (11x11)
     private static final int TILE_SIZE = 32; // Size of a tile in pixels
     private Reward reward; // Set of rewards available in this room
+    private Trap trap; // Trap door for boss rooms
     private GameMap gameMap; // Reference to the game map for enemy generation
     private ProjectileManager projectileManager;
 
@@ -170,8 +172,9 @@ public class Room {
                 this.walls.add(new Wall(0, 0, 1, ROOM_SIZE)); // left
                 this.walls.add(new Wall(ROOM_SIZE - 1, 0, 1, ROOM_SIZE)); // right
             }
-            // Ensuite générer ennemis (ne dépend plus du chargement de layout)
-            generateRandomEnemies(projectileManager, gameMap);
+            if (!TEST_DISABLE_NORMAL_ENEMIES) {
+                generateRandomEnemies(projectileManager, gameMap);
+            }
         } else {
             if (this.type == RoomType.BOSS) {
                 spawnBoss();
@@ -192,25 +195,11 @@ public class Room {
         return false;
     }
 
-    // Vérifie si la tile correspond à une porte
-    private boolean isDoorTile(int tx, int ty) {
-        for (Direction d : directions) {
-            switch (d) {
-                case NORTH -> { if (tx == DOOR_POS && ty == 0) return true; }
-                case SOUTH -> { if (tx == DOOR_POS && ty == ROOM_SIZE - 1) return true; }
-                case EAST  -> { if (tx == ROOM_SIZE - 1 && ty == DOOR_POS) return true; }
-                case WEST  -> { if (tx == 0 && ty == DOOR_POS) return true; }
-            }
-        }
-        return false;
-    }
-
     // Vérifie qu'une tile est valide pour spawn (pas mur, pas porte, pas bordure, pas sur un autre ennemi)
     private boolean isTileValidForSpawn(int tx, int ty) {
         // éviter bordure
         if (tx <= 0 || tx >= ROOM_SIZE - 1 || ty <= 0 || ty >= ROOM_SIZE - 1) return false;
         if (isTileBlocked(tx, ty)) return false;
-        if (isDoorTile(tx, ty)) return false;
         // éviter collision avec autres ennemis (par tile)
         for (Enemy e : enemies) {
             int etx = (int) (e.getX() / TILE_SIZE);
@@ -286,19 +275,42 @@ public class Room {
     // REWARDS
 
     // Generate a random reward for this room
-        public Reward generateReward() {
+        public Reward generateReward(RoomType roomType) {
         int randomNum = (int) (Math.random() * 100);
-        if (randomNum < 65) {
-            reward = new Reward(RewardType.HEALTH);
-        } else if (randomNum < 85) {
-            reward = new Reward(RewardType.SPEED);
-        } else if (randomNum < 99) {
-            reward = new Reward(RewardType.TEARS_SIZE);
-        } else {
-            reward = new Reward(RewardType.DAMAGE);
+        switch (roomType) {
+            case NORMAL :
+                if (randomNum < 65) {
+                    reward = new Reward(RewardType.HEALTH);
+                } else if (randomNum < 85) {
+                    reward = new Reward(RewardType.SPEED);
+                } else if (randomNum < 99) {
+                    reward = new Reward(RewardType.TEARS_SIZE);
+                } else {
+                    reward = new Reward(RewardType.DAMAGE);
+                }
+                break;
+            case BOSS :
+                generateTrapDoor();
+                return null;
         }
+
+        
         reward.setPosition(); // Set position for rendering 
         return reward;
+    }
+
+    // Generate a trap door reward for boss rooms
+    private void generateTrapDoor() {
+        trap = new Trap();
+        trap.setPosition(); // Set position for rendering
+    }
+
+    public Trap getTrap() {
+        return trap;
+    }
+
+    public void setTrap(Trap trap) {
+        this.trap = trap;
     }
 
     // WALLS

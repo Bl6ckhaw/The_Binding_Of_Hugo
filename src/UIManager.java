@@ -25,7 +25,7 @@ public class UIManager {
     /**
      * Renders the UI for the player (currently only the health bar).
      */
-    public void render(Player player) {
+    public void render(Player player, int currentLevel) {
         // Clear previous UI
         gc.clearRect(0, 0, uiCanvas.getWidth(), uiCanvas.getHeight());
 
@@ -34,6 +34,8 @@ public class UIManager {
 
         // Draw player stats
         drawPlayerStat(player);
+
+        drawLevel(currentLevel);
     }
 
     // Draws the player's health bar as a row of hearts
@@ -65,6 +67,11 @@ public class UIManager {
         gc.fillText("Speed: " + player.getSpeed(), 10, 60);
         gc.setFill(Color.PURPLE);
         gc.fillText("Tears Size: " + player.getTearsSize(), 10, 80);
+    }
+
+    private void drawLevel(int currentLevel) {
+        gc.setFill(Color.WHITE);
+        gc.fillText("Level: " + currentLevel, 10, 100);
     }
 
 

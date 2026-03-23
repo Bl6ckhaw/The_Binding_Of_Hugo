@@ -2,6 +2,7 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
 public class BossEnemy extends Enemy {
+    private static final boolean TEST_PASSIVE_BOSS = true;
     private int attackCooldown = 0;
     private static final int MAX_COOLDOWN = 90; 
 
@@ -14,6 +15,10 @@ public class BossEnemy extends Enemy {
     
     @Override
     public void update(Player player, ProjectileManager projectileManager, GameMap gameMap) {
+        if (TEST_PASSIVE_BOSS) {
+            return;
+        }
+
         if (attackCooldown > 0) {
             attackCooldown--;
         } else {

@@ -2,13 +2,17 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
 
 
 public class GameMap {
-    private static final int GRID_SIZE = 3; // Number of rooms per row/column (3x3 grid)
+    private static final int GRID_SIZE = 8; // Number of rooms per row/column (3x3 grid)
+    private static final int MIN_ROOMS = 5;
     private static final int TILE_SIZE = 32; // Size of each tile in pixels
     private static final int ROOM_SIZE = 11; // Number of tiles per room (11x11 grid)
     private static final int DOOR_POSITION = 5; // Door is in the middle of the wall (11/2 = 5)
@@ -25,51 +29,209 @@ public class GameMap {
         this.projectileManager = projectileManager;
         grid = new Room[GRID_SIZE][GRID_SIZE];
         initializeRooms();
-        playerX = 0; // Starting position in the grid
-        playerY = 0; // Starting position in the grid
+        playerX = startRoom.getX();
+        playerY = startRoom.getY();
         currentRoom = startRoom; // Set current room to start room
         nextRoom = null; // No next room at start
     }
 
     // Initializes all rooms and generates enemies for normal rooms
     private void initializeRooms() {
-        // Create all rooms first
+        clearLayoutDebugFile();
+        Random rng = new Random();
+        int targetRooms = 10 + rng.nextInt(5) + GameApp.currentLevel; // 10..14
+
+        int startX;
+        int startY;
+        int randomStart = rng.nextInt(4);
+        switch (randomStart) {
+            case 0 -> {
+                startX = 3;
+                startY = 3;
+            }
+            case 1 -> {
+                startX = 4;
+                startY = 3;
+            }
+            case 2 -> {
+                startX = 3;
+                startY = 4;
+            }
+            default -> {
+                startX = 4;
+                startY = 4;
+            }
+        }
+
+        startRoom = new Room(RoomType.START, startX, startY);
+        grid[startX][startY] = startRoom;
+
+        int[][] distanceFromStart = new int[GRID_SIZE][GRID_SIZE];
         for (int i = 0; i < GRID_SIZE; i++) {
             for (int j = 0; j < GRID_SIZE; j++) {
-                if (i == 0 && j == 0) {
-                    grid[i][j] = new Room(RoomType.START, i, j);
-                    startRoom = grid[i][j];
-                } else if (i == GRID_SIZE - 1 && j == GRID_SIZE - 1) {
-                    grid[i][j] = new Room(RoomType.BOSS, i, j);
-                    bossRoom = grid[i][j];
-                } else {
-                    grid[i][j] = new Room(RoomType.NORMAL, i, j);
+                distanceFromStart[i][j] = -1;
+            }
+        }
+        distanceFromStart[startX][startY] = 0;
 
-                    // Try to load a random saved layout and copy it INTO this room
-                    try {
-                        Path dir = Paths.get("saved_rooms");
-                        if (Files.exists(dir) && Files.isDirectory(dir)) {
-                            List<Path> files = Files.list(dir)
-                                    .filter(Files::isRegularFile)
-                                    .filter(p -> p.toString().toLowerCase().endsWith(".txt"))
-                                    .collect(Collectors.toList());
-                            if (!files.isEmpty()) {
-                                Path chosen = files.get(new Random().nextInt(files.size()));
-                                try {
-                                    Room loaded = MapIO.loadRoom(chosen);
-                                    // copy layout (walls) into the freshly created room
-                                    grid[i][j].copyLayoutFrom(loaded);
-                                } catch (IOException ex) {
-                                    System.err.println("Failed to load prefab " + chosen + " : " + ex.getMessage());
-                                }
-                            }
+        ArrayDeque<int[]> queue = new ArrayDeque<>();
+        queue.add(new int[]{startX, startY});
+        List<int[]> endRooms = new ArrayList<>();
+        int roomsCount = 1;
+
+        while (!queue.isEmpty() && roomsCount < targetRooms) {
+            int[] current = queue.poll();
+            int cx = current[0];
+            int cy = current[1];
+            int currentDist = distanceFromStart[cx][cy];
+            boolean isStartRoom = (cx == startX && cy == startY);
+
+            List<int[]> neighbors = new ArrayList<>();
+            neighbors.add(new int[]{cx, cy - 1});
+            neighbors.add(new int[]{cx, cy + 1});
+            neighbors.add(new int[]{cx + 1, cy});
+            neighbors.add(new int[]{cx - 1, cy});
+            Collections.shuffle(neighbors, rng);
+
+            int createdFromCurrent = 0;
+
+            for (int[] n : neighbors) {
+                if (roomsCount >= targetRooms) break;
+
+                int nx = n[0];
+                int ny = n[1];
+
+                boolean forceFirstExpansion = isStartRoom && roomsCount == 1 && createdFromCurrent == 0;
+                if (!forceFirstExpansion && rng.nextDouble() < 0.5) continue;
+                if (!isInsideGrid(nx, ny)) continue;
+                if (grid[nx][ny] != null) continue;
+                if (countOccupiedNeighbors(nx, ny) >= 2) continue;
+
+                Room normalRoom = new Room(RoomType.NORMAL, nx, ny);
+                loadRandomLayoutInto(normalRoom, rng);
+                grid[nx][ny] = normalRoom;
+                distanceFromStart[nx][ny] = currentDist + 1;
+                queue.add(new int[]{nx, ny});
+
+                roomsCount++;
+                createdFromCurrent++;
+            }
+
+            if (createdFromCurrent == 0 && !(cx == startX && cy == startY)) {
+                endRooms.add(new int[]{cx, cy});
+            }
+        }
+
+        if (roomsCount < MIN_ROOMS) {
+            boolean createdRoom = true;
+            while (roomsCount < MIN_ROOMS && createdRoom) {
+                createdRoom = false;
+
+                List<int[]> occupiedRooms = new ArrayList<>();
+                for (int i = 0; i < GRID_SIZE; i++) {
+                    for (int j = 0; j < GRID_SIZE; j++) {
+                        if (grid[i][j] != null) {
+                            occupiedRooms.add(new int[]{i, j});
                         }
-                    } catch (IOException ex) {
-                        System.err.println("Could not list saved_rooms: " + ex.getMessage());
+                    }
+                }
+                Collections.shuffle(occupiedRooms, rng);
+
+                for (int[] current : occupiedRooms) {
+                    int cx = current[0];
+                    int cy = current[1];
+
+                    List<int[]> neighbors = new ArrayList<>();
+                    neighbors.add(new int[]{cx, cy - 1});
+                    neighbors.add(new int[]{cx, cy + 1});
+                    neighbors.add(new int[]{cx + 1, cy});
+                    neighbors.add(new int[]{cx - 1, cy});
+                    Collections.shuffle(neighbors, rng);
+
+                    for (int[] n : neighbors) {
+                        int nx = n[0];
+                        int ny = n[1];
+
+                        if (!isInsideGrid(nx, ny)) continue;
+                        if (grid[nx][ny] != null) continue;
+                        if (countOccupiedNeighbors(nx, ny) >= 3) continue;
+
+                        Room normalRoom = new Room(RoomType.NORMAL, nx, ny);
+                        loadRandomLayoutInto(normalRoom, rng);
+                        grid[nx][ny] = normalRoom;
+
+                        int parentDist = distanceFromStart[cx][cy];
+                        if (parentDist < 0) parentDist = 0;
+                        distanceFromStart[nx][ny] = parentDist + 1;
+
+                        roomsCount++;
+                        createdRoom = true;
+                        break;
+                    }
+
+                    if (roomsCount >= MIN_ROOMS) break;
+                }
+            }
+        }
+
+        List<int[]> bossCandidates = new ArrayList<>();
+        for (int i = 0; i < GRID_SIZE; i++) {
+            for (int j = 0; j < GRID_SIZE; j++) {
+                if (grid[i][j] == null) continue;
+                if (i == startX && j == startY) continue;
+                if (countOccupiedNeighbors(i, j) == 1) {
+                    bossCandidates.add(new int[]{i, j});
+                }
+            }
+        }
+
+        if (bossCandidates.isEmpty()) {
+            bossCandidates.addAll(endRooms);
+        }
+
+        if (bossCandidates.isEmpty()) {
+            for (int i = 0; i < GRID_SIZE; i++) {
+                for (int j = 0; j < GRID_SIZE; j++) {
+                    if (grid[i][j] != null && !(i == startX && j == startY)) {
+                        bossCandidates.add(new int[]{i, j});
                     }
                 }
             }
         }
+
+        int minBossDistance = Math.max(4, targetRooms / 3);
+        int[] bossPos = null;
+        int bestDistance = -1;
+
+        for (int[] pos : bossCandidates) {
+            int x = pos[0];
+            int y = pos[1];
+            int dist = distanceFromStart[x][y];
+            if (dist >= minBossDistance && dist > bestDistance) {
+                bestDistance = dist;
+                bossPos = pos;
+            }
+        }
+
+        if (bossPos == null) {
+            for (int[] pos : bossCandidates) {
+                int x = pos[0];
+                int y = pos[1];
+                int dist = distanceFromStart[x][y];
+                if (dist > bestDistance) {
+                    bestDistance = dist;
+                    bossPos = pos;
+                }
+            }
+        }
+
+        if (bossPos != null) {
+            int bx = bossPos[0];
+            int by = bossPos[1];
+            bossRoom = new Room(RoomType.BOSS, bx, by);
+            grid[bx][by] = bossRoom;
+        }
+
 
         // THEN set references only on non-null rooms
         for (int i = 0; i < GRID_SIZE; i++) {
@@ -85,6 +247,98 @@ public class GameMap {
             for (int j = 0; j < GRID_SIZE; j++) {
                 connectRooms(i, j);
             }
+        }
+
+        dumpLayoutToFile("after_connect", targetRooms, roomsCount);
+    }
+
+    private void dumpLayoutToFile(String phase, int targetRooms, int roomsCount) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("phase=").append(phase).append("\n");
+        sb.append("targetRooms=").append(targetRooms)
+          .append(", actualRooms=").append(roomsCount)
+          .append("\n");
+
+        for (int y = 0; y < GRID_SIZE; y++) {
+            for (int x = 0; x < GRID_SIZE; x++) {
+                Room room = grid[x][y];
+                char marker = '.';
+                if (room != null) {
+                    if (room.getType() == RoomType.START) {
+                        marker = 'S';
+                    } else if (room.getType() == RoomType.BOSS) {
+                        marker = 'B';
+                    } else {
+                        marker = 'N';
+                    }
+                }
+                sb.append(marker);
+            }
+            sb.append("\n");
+        }
+        sb.append("---\n");
+
+        try {
+            Path outDir = Paths.get("saved_rooms");
+            Files.createDirectories(outDir);
+            Path outFile = outDir.resolve("layout_debug.txt");
+            Files.writeString(
+                    outFile,
+                    sb.toString(),
+                    java.nio.file.StandardOpenOption.CREATE,
+                    java.nio.file.StandardOpenOption.APPEND
+            );
+        } catch (IOException ex) {
+            System.err.println("Could not write layout_debug.txt: " + ex.getMessage());
+        }
+    }
+
+    private void clearLayoutDebugFile() {
+        try {
+            Path outDir = Paths.get("saved_rooms");
+            Files.createDirectories(outDir);
+            Path outFile = outDir.resolve("layout_debug.txt");
+            Files.deleteIfExists(outFile);
+        } catch (IOException ex) {
+            System.err.println("Could not clear layout_debug.txt: " + ex.getMessage());
+        }
+    }
+
+    private boolean isInsideGrid(int x, int y) {
+        return x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE;
+    }
+
+    private int countOccupiedNeighbors(int x, int y) {
+        int count = 0;
+
+        if (isInsideGrid(x, y - 1) && grid[x][y - 1] != null) count++;
+        if (isInsideGrid(x, y + 1) && grid[x][y + 1] != null) count++;
+        if (isInsideGrid(x + 1, y) && grid[x + 1][y] != null) count++;
+        if (isInsideGrid(x - 1, y) && grid[x - 1][y] != null) count++;
+
+        return count;
+    }
+
+    private void loadRandomLayoutInto(Room room, Random rng) {
+        try {
+            Path dir = Paths.get("saved_rooms");
+            if (Files.exists(dir) && Files.isDirectory(dir)) {
+                List<Path> files = Files.list(dir)
+                        .filter(Files::isRegularFile)
+                        .filter(p -> p.toString().toLowerCase().endsWith(".txt"))
+                        .collect(Collectors.toList());
+                if (!files.isEmpty()) {
+                    Path chosen = files.get(rng.nextInt(files.size()));
+                    try {
+                        Room loaded = MapIO.loadRoom(chosen);
+                        room.copyLayoutFrom(loaded);
+                    } catch (IOException ex) {
+                        System.err.println("Failed to load prefab " + chosen + " : " + ex.getMessage());
+                    }
+                }
+            }
+        } catch (IOException ex) {
+            System.err.println("Could not list saved_rooms: " + ex.getMessage());
         }
     }
 

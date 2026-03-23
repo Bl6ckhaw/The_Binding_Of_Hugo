@@ -34,6 +34,10 @@ public class GameApp extends Application {
     private double screenWidth = Screen.getPrimary().getBounds().getWidth();
     private double screenHeight = Screen.getPrimary().getBounds().getHeight();
 
+    // current level
+    public static int currentLevel = 0;
+    private boolean transitionInProgress = false;
+
     @Override
     public void start(Stage primaryStage) {
         showMenu(primaryStage);
@@ -76,6 +80,8 @@ public class GameApp extends Application {
     }
 
     public void startGame(Stage primaryStage){
+        currentLevel = 0;
+        transitionInProgress = false;
 
         // Create a canvas for game rendering
         Canvas gameCanvas = new Canvas(screenWidth, screenHeight);
@@ -133,7 +139,16 @@ public class GameApp extends Application {
                 if (!currentRoom.isCompleted() && currentRoom.getEnemies().isEmpty()) {
                     currentRoom.setDoorsClosed(false);
                     currentRoom.setCompleted(true);
-                    currentRoom.generateReward(); // Generate a reward for the room
+                    
+                    // Si c'est une salle BOSS, activer le trap au lieu de générer une récompense
+                    if (currentRoom.getType() == RoomType.BOSS) {
+                        currentRoom.generateReward(currentRoom.getType()); 
+                        if (currentRoom.getTrap() != null) {
+                            currentRoom.getTrap().activate(); 
+                        }
+                    } else if (currentRoom.getType() == RoomType.NORMAL) {
+                        currentRoom.generateReward(currentRoom.getType()); 
+                    }
                 }
 
                 // Check if player is hit by projectiles
@@ -176,6 +191,19 @@ public class GameApp extends Application {
                     
                 }
 
+                // Check trap interaction (boss room)
+                Trap trap = currentRoom.getTrap();
+                if (trap != null && trap.isVisible()) {
+                    double dx = player.getX() - trap.getX();
+                    double dy = player.getY() - trap.getY();
+                    double distance = Math.hypot(dx, dy);
+
+                    if (distance < 20 && !transitionInProgress) {
+                        advanceToNextLevel();
+                        return;
+                    }
+                }
+
                 double width = gameCanvas.getWidth();
                 double height = gameCanvas.getHeight();
                 double tileSize = Math.min(width, height) / 11.0;
@@ -186,12 +214,19 @@ public class GameApp extends Application {
 
                 // Render everything (room, projectiles, enemies, UI)
                 roomRenderer.renderRoom(currentRoom, player.getX(), player.getY());
+
                 if (reward != null) {
                     roomRenderer.renderRewards(reward);
                 }
                 projectileManager.render(roomRenderer.getGraphicsContext(), tileSize, offsetX, offsetY);
                 enemyManager.renderAll(roomRenderer.getGraphicsContext(), tileSize, offsetX, offsetY);
-                uiManager.render(player);
+
+                // Draw trap above projectiles/enemies to keep it visible
+                if (currentRoom.getTrap() != null && currentRoom.getTrap().isVisible()) {
+                    roomRenderer.renderTrap(currentRoom.getTrap());
+                }
+
+                uiManager.render(player, currentLevel);
             }
         };
         gameLoop.start();
@@ -355,6 +390,22 @@ public class GameApp extends Application {
             ProjectileTarget.ENEMY    // Targets enemies
         );
         projectileManager.addProjectile(projectile);
+    }
+
+    private void advanceToNextLevel() {
+        transitionInProgress = true;
+        currentLevel++;
+        System.err.println("[DEBUG] Next level: " + currentLevel);
+
+        projectileManager.clearProjectiles();
+        gameMap = new GameMap(projectileManager);
+
+        Room startRoom = gameMap.getCurrentRoom();
+        enemyManager.setEnemies(new java.util.ArrayList<>(startRoom.getEnemies()));
+        startRoom.setDoorsClosed(false);
+
+        player.setPosition(5 * 32 + 16, 5 * 32 + 16);
+        transitionInProgress = false;
     }
 
     public static void main(String[] args) {
