@@ -29,24 +29,26 @@ git clone https://github.com/Bl6ckhaw/The_Binding_Of_Hugo.git
 cd The_Binding_Of_Hugo
 ```
 
-### 3. Compiler le projet
+### 3. Lancer le jeu en 1 commande (Windows)
 
-Adapte le chemin du JavaFX SDK à ton installation :
+Depuis la racine du projet :
 
 ```powershell
-javac --module-path "C:\Program Files\javafx-sdk-21.0.8\lib" --add-modules javafx.controls,javafx.fxml -d out src\*.java
+.\run-game.ps1
 ```
 
-### 4. Créer le JAR
+Ou en double-clic / invite de commandes :
 
-```powershell
-jar --create --file TheBindingOfHugo.jar -C out .
+```bat
+run-game.bat
 ```
 
-### 5. Lancer le jeu
+Le script détecte JavaFX automatiquement (et inclut `javafx.media` pour la transition vidéo).
+
+Si ton JavaFX est ailleurs, précise le chemin une fois :
 
 ```powershell
-java --module-path "C:\Program Files\javafx-sdk-21.0.8\lib" --add-modules javafx.controls,javafx.fxml -jar TheBindingOfHugo.jar
+.\run-game.ps1 -JavaFxLib "C:\Program Files\javafx-sdk-21.0.8\lib"
 ```
 
 ## 📁 Structure du projet

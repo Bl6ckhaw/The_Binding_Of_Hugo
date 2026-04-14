@@ -230,8 +230,38 @@ public class GameMap {
             int by = bossPos[1];
             bossRoom = new Room(RoomType.BOSS, bx, by);
             grid[bx][by] = bossRoom;
+            endRooms.removeIf(pos -> pos[0] == bx && pos[1] == by);
+        }
+        
+        int[] itemPos = null;
+        if (!endRooms.isEmpty()) {
+            itemPos = endRooms.get(rng.nextInt(endRooms.size()));
+        } else {
+            List<int[]> normalRooms = new ArrayList<>();
+            for (int i = 0; i < GRID_SIZE; i++) {
+                for (int j = 0; j < GRID_SIZE; j++) {
+                    if (grid[i][j] != null && grid[i][j].getType() == RoomType.NORMAL) {
+                        normalRooms.add(new int[]{i, j});
+                    }
+                }
+            }
+            if (!normalRooms.isEmpty()) {
+                itemPos = normalRooms.get(rng.nextInt(normalRooms.size()));
+            }
         }
 
+        if (itemPos != null) {
+            int ix = itemPos[0];
+            int iy = itemPos[1];
+            Room previousRoom = grid[ix][iy];
+            Room itemRoom = new Room(RoomType.ITEM, ix, iy);
+            if (!loadFixedLayoutInto(itemRoom, Paths.get("saved_rooms", "item_room.txt")) && previousRoom != null) {
+                // Fallback: keep previous geometry if item_room.txt is unavailable.
+                itemRoom.copyLayoutFrom(previousRoom);
+            }
+            grid[ix][iy] = itemRoom;
+        }
+        
 
         // THEN set references only on non-null rooms
         for (int i = 0; i < GRID_SIZE; i++) {
@@ -268,6 +298,8 @@ public class GameMap {
                         marker = 'S';
                     } else if (room.getType() == RoomType.BOSS) {
                         marker = 'B';
+                    } else if (room.getType() == RoomType.ITEM) {
+                        marker = 'I';
                     } else {
                         marker = 'N';
                     }
@@ -326,6 +358,7 @@ public class GameMap {
                 List<Path> files = Files.list(dir)
                         .filter(Files::isRegularFile)
                         .filter(p -> p.toString().toLowerCase().endsWith(".txt"))
+                    .filter(p -> !p.getFileName().toString().equalsIgnoreCase("item_room.txt"))
                         .collect(Collectors.toList());
                 if (!files.isEmpty()) {
                     Path chosen = files.get(rng.nextInt(files.size()));
@@ -339,6 +372,22 @@ public class GameMap {
             }
         } catch (IOException ex) {
             System.err.println("Could not list saved_rooms: " + ex.getMessage());
+        }
+    }
+
+    private boolean loadFixedLayoutInto(Room room, Path layoutPath) {
+        if (room == null || layoutPath == null) return false;
+        if (!Files.exists(layoutPath) || !Files.isRegularFile(layoutPath)) {
+            System.err.println("Missing fixed layout file: " + layoutPath);
+            return false;
+        }
+        try {
+            Room loaded = MapIO.loadRoom(layoutPath);
+            room.copyLayoutFrom(loaded);
+            return true;
+        } catch (IOException ex) {
+            System.err.println("Failed to load fixed layout " + layoutPath + " : " + ex.getMessage());
+            return false;
         }
     }
 

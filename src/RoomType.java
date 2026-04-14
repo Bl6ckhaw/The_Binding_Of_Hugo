@@ -1,5 +1,6 @@
 public enum RoomType {
     START,
     NORMAL,
-    BOSS
+    BOSS,
+    ITEM
 }

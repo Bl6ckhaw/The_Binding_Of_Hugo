@@ -106,4 +106,10 @@ public class Player {
     public Color getProjectileColor() {
         return projectileColor;
     }
+
+    public int setMaxHealth(int bonusHealth) {
+        this.maxHealth += bonusHealth;
+        
+        return maxHealth;
+    }
 }

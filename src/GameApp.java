@@ -1,6 +1,13 @@
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import javafx.animation.AnimationTimer;
+import javafx.animation.PauseTransition;
 import javafx.application.Application;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -10,8 +17,12 @@ import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
+import javafx.scene.media.MediaView;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 public class GameApp extends Application {
     // Class attributes for global access
@@ -21,6 +32,14 @@ public class GameApp extends Application {
     private ProjectileManager projectileManager; // Instance to manage projectiles
     private EnemyManager enemyManager; // Instance to manage enemies
     private UIManager uiManager; // Instance to manage UI
+    private StackPane gameRoot;
+    private MediaView transitionView;
+    private MediaPlayer transitionPlayer;
+    private PauseTransition transitionMinTimer;
+    private static final int MIN_TRANSITION_MS = 2000;
+    private boolean transitionVideoEnded = false;
+    private boolean transitionMinTimeElapsed = false;
+    private final List<ItemDefinition> collectedItems = new ArrayList<>();
 
     
     // Set to manage multiple key presses
@@ -82,6 +101,7 @@ public class GameApp extends Application {
     public void startGame(Stage primaryStage){
         currentLevel = 0;
         transitionInProgress = false;
+        collectedItems.clear();
 
         // Create a canvas for game rendering
         Canvas gameCanvas = new Canvas(screenWidth, screenHeight);
@@ -115,6 +135,9 @@ public class GameApp extends Application {
                 if (!player.isAlive()) {
                     this.stop(); // stop the game loop before changing scene
                     javafx.application.Platform.runLater(() -> showMenu(primaryStage));
+                    return;
+                }
+                if (transitionInProgress) {
                     return;
                 }
                 // Handle continuous movement
@@ -191,6 +214,20 @@ public class GameApp extends Application {
                     
                 }
 
+                ItemInstance item = currentRoom.getItemInstance();
+                if (item != null && !item.isCollected()) {
+                    double dx = player.getX() - item.getX();
+                    double dy = player.getY() - item.getY();
+                    double distance = Math.hypot(dx, dy);
+
+                    if (distance < 15) {
+                        System.err.println("[DEBUG] Player collected item: " + item.getDefinition().getName());
+                        applyItemEffect(item.getDefinition());
+                        collectedItems.add(item.getDefinition());
+                        item.collect();
+                    }
+                }
+
                 // Check trap interaction (boss room)
                 Trap trap = currentRoom.getTrap();
                 if (trap != null && trap.isVisible()) {
@@ -218,6 +255,9 @@ public class GameApp extends Application {
                 if (reward != null) {
                     roomRenderer.renderRewards(reward);
                 }
+                if (item != null) {
+                    roomRenderer.renderItem(item);
+                }
                 projectileManager.render(roomRenderer.getGraphicsContext(), tileSize, offsetX, offsetY);
                 enemyManager.renderAll(roomRenderer.getGraphicsContext(), tileSize, offsetX, offsetY);
 
@@ -226,14 +266,23 @@ public class GameApp extends Application {
                     roomRenderer.renderTrap(currentRoom.getTrap());
                 }
 
-                uiManager.render(player, currentLevel);
+                uiManager.render(player, currentLevel, collectedItems);
             }
         };
         gameLoop.start();
 
         // Create the main layout and add both canvases
-        StackPane root = new StackPane(gameCanvas, uiManager.getCanvas());
-        Scene scene = new Scene(root);
+        gameRoot = new StackPane(gameCanvas, uiManager.getCanvas());
+        transitionView = new MediaView();
+        transitionView.setVisible(false);
+        transitionView.setMouseTransparent(true);
+        transitionView.setManaged(false);
+        transitionView.setFitWidth(screenWidth);
+        transitionView.setFitHeight(screenHeight);
+        transitionView.setPreserveRatio(false);
+        gameRoot.getChildren().add(transitionView);
+
+        Scene scene = new Scene(gameRoot);
         primaryStage.setTitle("The Binding of Hugo");
         primaryStage.setScene(scene);
         primaryStage.setFullScreen(true); // Fullscreen mode
@@ -392,8 +441,132 @@ public class GameApp extends Application {
         projectileManager.addProjectile(projectile);
     }
 
+    private void applyItemEffect(ItemDefinition definition) {
+        switch (definition.getStat()) {
+            case HEALTH -> {
+                int bonusHealth = (int) Math.round(definition.getAmount());
+                player.setMaxHealth(bonusHealth);
+            }
+            case DAMAGE -> {
+                int damageIncreases = (int) Math.round(definition.getAmount());
+                for (int i = 0; i < damageIncreases; i++) {
+                    player.increaseDamage();
+                }
+            }
+            case SPEED -> {
+                int speedSteps = (int) Math.round(definition.getAmount() / 0.5);
+                for (int i = 0; i < speedSteps; i++) {
+                    player.increaseSpeed();
+                }
+            }
+            case TEARS_SIZE -> {
+                int tearsSteps = (int) Math.round(definition.getAmount() / 0.5);
+                for (int i = 0; i < tearsSteps; i++) {
+                    player.increaseTearsSize();
+                }
+            }
+        }
+
+        System.err.println("[DEBUG] Player stats - Health: " + player.getHealth() +
+                           ", Damage: " + player.getDamage() +
+                           ", Speed: " + player.getSpeed() +
+                           ", Tears Size: " + player.getTearsSize());
+    }
+
     private void advanceToNextLevel() {
         transitionInProgress = true;
+        pressedKeys.clear();
+        transitionVideoEnded = false;
+        transitionMinTimeElapsed = false;
+
+        if (transitionMinTimer != null) {
+            transitionMinTimer.stop();
+        }
+        transitionMinTimer = new PauseTransition(Duration.millis(MIN_TRANSITION_MS));
+        transitionMinTimer.setOnFinished(event -> {
+            transitionMinTimeElapsed = true;
+            tryCompleteLevelTransition();
+        });
+        transitionMinTimer.playFromStart();
+
+        String transitionPath = resolveTransitionMediaUri();
+        if (transitionPath == null) {
+            System.err.println("[DEBUG] Transition video not found. Skipping video transition.");
+            transitionVideoEnded = true;
+            tryCompleteLevelTransition();
+            return;
+        }
+
+        System.err.println("[DEBUG] Transition media URI: " + transitionPath);
+
+        Media media = new Media(transitionPath);
+        transitionPlayer = new MediaPlayer(media);
+        transitionPlayer.setAutoPlay(false);
+        transitionPlayer.setOnEndOfMedia(() -> {
+            transitionVideoEnded = true;
+            tryCompleteLevelTransition();
+        });
+        transitionPlayer.setOnError(() -> {
+            System.err.println("[DEBUG] Transition video error: " + transitionPlayer.getError());
+            transitionVideoEnded = true;
+            tryCompleteLevelTransition();
+        });
+        media.setOnError(() -> {
+            System.err.println("[DEBUG] Media loading error: " + media.getError());
+            transitionVideoEnded = true;
+            tryCompleteLevelTransition();
+        });
+        transitionPlayer.setOnReady(() -> {
+            transitionView.toFront();
+            transitionView.setTranslateY(0);
+            transitionView.setVisible(true);
+            transitionPlayer.play();
+        });
+
+        transitionView.setMediaPlayer(transitionPlayer);
+    }
+
+    private void tryCompleteLevelTransition() {
+        if (transitionVideoEnded && transitionMinTimeElapsed) {
+            completeLevelTransition();
+        }
+    }
+
+    private String resolveTransitionMediaUri() {
+        Path localPath = Paths.get("cutScene", "transition.mp4").toAbsolutePath().normalize();
+        if (Files.exists(localPath) && Files.isRegularFile(localPath)) {
+            return localPath.toUri().toString();
+        }
+
+        URL classpathResource = getClass().getResource("/cutScene/transition.mp4");
+        if (classpathResource != null) {
+            return classpathResource.toExternalForm();
+        }
+
+        return null;
+    }
+
+    private void completeLevelTransition() {
+        if (!transitionInProgress) {
+            return;
+        }
+
+        if (transitionMinTimer != null) {
+            transitionMinTimer.stop();
+            transitionMinTimer = null;
+        }
+
+        if (transitionPlayer != null) {
+            transitionPlayer.stop();
+            transitionPlayer.dispose();
+            transitionPlayer = null;
+        }
+        if (transitionView != null) {
+            transitionView.setTranslateY(0);
+            transitionView.setMediaPlayer(null);
+            transitionView.setVisible(false);
+        }
+
         currentLevel++;
         System.err.println("[DEBUG] Next level: " + currentLevel);
 
@@ -405,6 +578,8 @@ public class GameApp extends Application {
         startRoom.setDoorsClosed(false);
 
         player.setPosition(5 * 32 + 16, 5 * 32 + 16);
+        transitionVideoEnded = false;
+        transitionMinTimeElapsed = false;
         transitionInProgress = false;
     }
 

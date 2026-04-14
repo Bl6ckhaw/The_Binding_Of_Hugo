@@ -1,3 +1,4 @@
+import java.util.List;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
@@ -25,7 +26,7 @@ public class UIManager {
     /**
      * Renders the UI for the player (currently only the health bar).
      */
-    public void render(Player player, int currentLevel) {
+    public void render(Player player, int currentLevel, List<ItemDefinition> collectedItems) {
         // Clear previous UI
         gc.clearRect(0, 0, uiCanvas.getWidth(), uiCanvas.getHeight());
 
@@ -36,6 +37,8 @@ public class UIManager {
         drawPlayerStat(player);
 
         drawLevel(currentLevel);
+
+        drawCollectedItems(collectedItems);
     }
 
     // Draws the player's health bar as a row of hearts
@@ -72,6 +75,41 @@ public class UIManager {
     private void drawLevel(int currentLevel) {
         gc.setFill(Color.WHITE);
         gc.fillText("Level: " + currentLevel, 10, 100);
+    }
+
+    private void drawCollectedItems(List<ItemDefinition> collectedItems) {
+        double panelX = uiCanvas.getWidth() - 260;
+        double startY = 40;
+
+        gc.setFill(Color.color(0, 0, 0, 0.45));
+        gc.fillRoundRect(panelX - 14, 12, 250, 260, 12, 12);
+
+        gc.setFill(Color.WHITE);
+        gc.fillText("Items", panelX, startY);
+
+        if (collectedItems == null || collectedItems.isEmpty()) {
+            gc.setFill(Color.LIGHTGRAY);
+            gc.fillText("Aucun item ramasse", panelX, startY + 22);
+            return;
+        }
+
+        int maxVisible = 10;
+        int startIndex = Math.max(0, collectedItems.size() - maxVisible);
+        for (int i = startIndex; i < collectedItems.size(); i++) {
+            ItemDefinition item = collectedItems.get(i);
+            double y = startY + 22 + (i - startIndex) * 20;
+            gc.setFill(colorForRarity(item.getRarity()));
+            gc.fillText("- " + item.getName(), panelX, y);
+        }
+    }
+
+    private Color colorForRarity(ItemRarity rarity) {
+        return switch (rarity) {
+            case COMMON -> Color.LIGHTGREEN;
+            case RARE -> Color.DEEPSKYBLUE;
+            case EPIC -> Color.GOLD;
+            case LEGENDARY -> Color.CRIMSON;
+        };
     }
 
 

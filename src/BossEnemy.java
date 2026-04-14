@@ -4,7 +4,7 @@ import javafx.scene.paint.Color;
 public class BossEnemy extends Enemy {
     private static final boolean TEST_PASSIVE_BOSS = true;
     private int attackCooldown = 0;
-    private static final int MAX_COOLDOWN = 90; 
+    private static final int MAX_COOLDOWN = 180; // 3 secondes à 60 FPS
 
 
 
@@ -32,17 +32,17 @@ public class BossEnemy extends Enemy {
         switch (pattern) {
             case 0, 1:
                 // Cross attack (+)
-                projectileManager.addProjectile(new Projectile(getX(), getY(), 2, 3, 20, Direction.NORTH, ProjectileOwner.ENEMY, ProjectileTarget.PLAYER));
-                projectileManager.addProjectile(new Projectile(getX(), getY(), 2, 3, 20, Direction.SOUTH, ProjectileOwner.ENEMY, ProjectileTarget.PLAYER));
-                projectileManager.addProjectile(new Projectile(getX(), getY(), 2, 3, 20, Direction.EAST, ProjectileOwner.ENEMY, ProjectileTarget.PLAYER));
-                projectileManager.addProjectile(new Projectile(getX(), getY(), 2, 3, 20, Direction.WEST, ProjectileOwner.ENEMY, ProjectileTarget.PLAYER));
+                projectileManager.addProjectile(new Projectile(getX(), getY(), 2, 1, 20, Direction.NORTH, ProjectileOwner.ENEMY, ProjectileTarget.PLAYER));
+                projectileManager.addProjectile(new Projectile(getX(), getY(), 2, 1, 20, Direction.SOUTH, ProjectileOwner.ENEMY, ProjectileTarget.PLAYER));
+                projectileManager.addProjectile(new Projectile(getX(), getY(), 2, 1, 20, Direction.EAST, ProjectileOwner.ENEMY, ProjectileTarget.PLAYER));
+                projectileManager.addProjectile(new Projectile(getX(), getY(), 2, 1, 20, Direction.WEST, ProjectileOwner.ENEMY, ProjectileTarget.PLAYER));
                 break;
             case 2:
                 // Diagonal attack (x)
-                projectileManager.addProjectile(new Projectile(getX(), getY(), 2, 3, 20, Direction.NORTH_EAST, ProjectileOwner.ENEMY, ProjectileTarget.PLAYER));
-                projectileManager.addProjectile(new Projectile(getX(), getY(), 2, 3, 20, Direction.NORTH_WEST, ProjectileOwner.ENEMY, ProjectileTarget.PLAYER));
-                projectileManager.addProjectile(new Projectile(getX(), getY(), 2, 3, 20, Direction.SOUTH_EAST, ProjectileOwner.ENEMY, ProjectileTarget.PLAYER));
-                projectileManager.addProjectile(new Projectile(getX(), getY(), 2, 3, 20, Direction.SOUTH_WEST, ProjectileOwner.ENEMY, ProjectileTarget.PLAYER));
+                projectileManager.addProjectile(new Projectile(getX(), getY(), 2, 1, 20, Direction.NORTH_EAST, ProjectileOwner.ENEMY, ProjectileTarget.PLAYER));
+                projectileManager.addProjectile(new Projectile(getX(), getY(), 2, 1, 20, Direction.NORTH_WEST, ProjectileOwner.ENEMY, ProjectileTarget.PLAYER));
+                projectileManager.addProjectile(new Projectile(getX(), getY(), 2, 1, 20, Direction.SOUTH_EAST, ProjectileOwner.ENEMY, ProjectileTarget.PLAYER));
+                projectileManager.addProjectile(new Projectile(getX(), getY(), 2, 1, 20, Direction.SOUTH_WEST, ProjectileOwner.ENEMY, ProjectileTarget.PLAYER));
                 break;
         }
 }

@@ -21,6 +21,7 @@ public class Room {
     private static final int ROOM_SIZE = 11; // Number of tiles per room (11x11)
     private static final int TILE_SIZE = 32; // Size of a tile in pixels
     private Reward reward; // Set of rewards available in this room
+    private ItemInstance itemInstance; // One item instance for ITEM rooms
     private Trap trap; // Trap door for boss rooms
     private GameMap gameMap; // Reference to the game map for enemy generation
     private ProjectileManager projectileManager;
@@ -123,6 +124,11 @@ public class Room {
     public Reward getRewards() {
         return reward;
     }
+
+    public ItemInstance getItemInstance() {
+        return itemInstance;
+    }
+
     public void setRewards(Reward reward) {
         this.reward = reward;
     }
@@ -163,7 +169,7 @@ public class Room {
         this.gameMap = gameMap;
         this.projectileManager = projectileManager;
 
-        if (this.type == RoomType.NORMAL) {
+        if (this.type == RoomType.NORMAL || this.type == RoomType.ITEM) {
             // Si aucun mur n'a été fourni (ni prefabs copiés), créer une bordure par défaut
             if (this.walls.isEmpty()) {
                 this.walls.clear();
@@ -172,8 +178,11 @@ public class Room {
                 this.walls.add(new Wall(0, 0, 1, ROOM_SIZE)); // left
                 this.walls.add(new Wall(ROOM_SIZE - 1, 0, 1, ROOM_SIZE)); // right
             }
-            if (!TEST_DISABLE_NORMAL_ENEMIES) {
+            if (this.type == RoomType.NORMAL && !TEST_DISABLE_NORMAL_ENEMIES) {
                 generateRandomEnemies(projectileManager, gameMap);
+            }
+            if (this.type == RoomType.ITEM && this.itemInstance == null) {
+                this.itemInstance = new ItemInstance(ItemCatalog.getRandomItemDefinition());
             }
         } else {
             if (this.type == RoomType.BOSS) {
@@ -209,7 +218,7 @@ public class Room {
         return true;
     }
 
-    // MODIFIÉ : génère un ennemi à une tile libre (essais limités)
+    // génère un ennemi à une tile libre
     public Enemy generateRandomEnemy(ProjectileManager projectileManager, GameMap gameMap) {
         int attempts = 50;
         while (attempts-- > 0) {
@@ -238,11 +247,11 @@ public class Room {
                 }
             }
         }
-        // si aucun emplacement trouvé, fallback : retourne null (ou un Wanderer au centre si tu préfères)
+        
         return null;
     }
 
-    // MODIFIÉ : génère plusieurs ennemis en utilisant la fonction ci‑dessus
+    // génère plusieurs ennemis en utilisant la fonction ci‑dessus
     private void generateRandomEnemies(ProjectileManager projectileManager, GameMap gameMap) {
         int numEnemies = 2 + (int)(Math.random() * 4); // 2 à 5 ennemis
 
@@ -291,6 +300,9 @@ public class Room {
                 break;
             case BOSS :
                 generateTrapDoor();
+                return null;
+            case ITEM :
+            case START :
                 return null;
         }
 

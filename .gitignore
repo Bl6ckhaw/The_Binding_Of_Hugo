@@ -39,12 +39,9 @@ target/
 *.swp
 *.bak
 
-# Node/npm (if present)
-node_modules/
-
-# Python (if present)
-__pycache__/
-*.pyc
 
 # Ignore OneDrive sync files
 *.lnk
+
+# Ignore layout / map files
+layout_debug.txt

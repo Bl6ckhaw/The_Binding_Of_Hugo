@@ -39,8 +39,9 @@ public class RoomRenderer {
 
         // Floor (centered square)
         Color floorColor = room.getType() == RoomType.START ? Color.LIGHTBLUE : 
-                          room.getType() == RoomType.BOSS ? Color.DARKBLUE : 
-                          Color.WHITE;
+                  room.getType() == RoomType.BOSS ? Color.DARKBLUE : 
+                  room.getType() == RoomType.ITEM ? Color.BEIGE :
+                  Color.WHITE;
         gc.setFill(floorColor);
         gc.fillRect(offsetX, offsetY, tileSize * ROOM_SIZE, tileSize * ROOM_SIZE);
 
@@ -124,6 +125,27 @@ public class RoomRenderer {
             case TEARS_SIZE -> gc.setFill(Color.PURPLE);
         }
         gc.fillRect(rewardX - tileSize/4, rewardY - tileSize/4, tileSize/2, tileSize/2);
+    }
+
+    public void renderItem(ItemInstance item) {
+        if (item == null || item.isCollected()) return;
+
+        double width = canvas.getWidth();
+        double height = canvas.getHeight();
+        double tileSize = Math.min(width, height) / ROOM_SIZE;
+        double offsetX = (width - tileSize * ROOM_SIZE) / 2;
+        double offsetY = (height - tileSize * ROOM_SIZE) / 2;
+
+        double itemX = offsetX + (item.getX() / (ROOM_SIZE * 32)) * (tileSize * ROOM_SIZE);
+        double itemY = offsetY + (item.getY() / (ROOM_SIZE * 32)) * (tileSize * ROOM_SIZE);
+
+        switch (item.getDefinition().getRarity()) {
+            case COMMON -> gc.setFill(Color.LIGHTGREEN);
+            case RARE -> gc.setFill(Color.DEEPSKYBLUE);
+            case EPIC -> gc.setFill(Color.GOLD);
+            case LEGENDARY -> gc.setFill(Color.CRIMSON);
+        }
+        gc.fillOval(itemX - tileSize / 3, itemY - tileSize / 3, 2 * tileSize / 3, 2 * tileSize / 3);
     }
 
     // Renders the trap door for boss rooms
