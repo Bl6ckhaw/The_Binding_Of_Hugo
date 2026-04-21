@@ -1,8 +1,6 @@
 
 import java.awt.Color;
 
-
-
 public class Player {
     private double x;             // Player's x position in pixels
     private double y;             // Player's y position in pixels
@@ -13,6 +11,7 @@ public class Player {
     private boolean isAlive;      // True if the player is alive
     private double tearsSize;     // Default projectile size
     private Color projectileColor; // Color of the player's projectiles
+    private int keyCount;         // Keys collected by the player
 
     public Player(double x, double y, int maxHealth, int damage, double speed) {
         this.x = x;
@@ -24,6 +23,7 @@ public class Player {
         this.isAlive = true; // Player is alive when created
         this.tearsSize = 8; // Default projectile size
         this.projectileColor = Color.BLACK; // Default projectile color
+        this.keyCount = 0; // Start with no keys
     }
 
     // Applies damage to the player and updates alive state
@@ -111,5 +111,37 @@ public class Player {
         this.maxHealth += bonusHealth;
         
         return maxHealth;
+    }
+
+    // KEY COUNTER
+
+    // Adds a key to the player's inventory
+    public void addKey() {
+        keyCount++;
+    }
+
+    // Uses one key if available
+    public boolean useKey() {
+        if (keyCount <= 0) {
+            return false;
+        }
+
+        keyCount--;
+        return true;
+    }
+
+    // Returns true if the player has at least one key
+    public boolean hasKey() {
+        return keyCount > 0;
+    }
+
+    // Returns the number of keys the player possesses
+    public int getKeyCount() {
+        return keyCount;
+    }
+
+    // Clears all keys from inventory
+    public void clearKeys() {
+        keyCount = 0;
     }
 }

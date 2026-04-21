@@ -12,6 +12,7 @@ Explore des salles générées aléatoirement, affronte des ennemis et des boss,
 - **Tirer** : Flèches directionnelles (↑ ↓ ← →)
 - **Objectif** : Élimine tous les ennemis de chaque salle, récupère des récompenses, et bats le boss final !
 - **HUD** : En haut à gauche, tu vois ta vie, tes dégâts, ta vitesse et la taille de tes projectiles.
+            En haut à droite, tu vois les items collectés.
 
 ## 📦 Installation
 

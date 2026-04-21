@@ -26,7 +26,7 @@ public class UIManager {
     /**
      * Renders the UI for the player (currently only the health bar).
      */
-    public void render(Player player, int currentLevel, List<ItemDefinition> collectedItems) {
+    public void render(Player player, int currentLevel, List<ItemDefinition> collectedItems, int keyCount) {
         // Clear previous UI
         gc.clearRect(0, 0, uiCanvas.getWidth(), uiCanvas.getHeight());
 
@@ -37,6 +37,8 @@ public class UIManager {
         drawPlayerStat(player);
 
         drawLevel(currentLevel);
+
+        drawKeyCount(keyCount);
 
         drawCollectedItems(collectedItems);
     }
@@ -75,6 +77,11 @@ public class UIManager {
     private void drawLevel(int currentLevel) {
         gc.setFill(Color.WHITE);
         gc.fillText("Level: " + currentLevel, 10, 100);
+    }
+
+    private void drawKeyCount(int keyCount) {
+        gc.setFill(Color.GOLD);
+        gc.fillText("Keys: " + keyCount, 10, 120);
     }
 
     private void drawCollectedItems(List<ItemDefinition> collectedItems) {

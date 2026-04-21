@@ -48,8 +48,16 @@ public class RoomRenderer {
         renderWalls(room, tileSize, offsetX, offsetY);
         
         // Doors
-        Color doorColor = room.areDoorsClosed() ? Color.RED : Color.GREEN;
         for (Direction dir : room.getDirections()) {
+            Color doorColor;
+            if (room.areDoorsClosed()) {
+                doorColor = Color.RED;
+            } else if (room.isDoorDirectionLocked(dir)) {
+                doorColor = Color.BLUE;
+            } else {
+                doorColor = room.areDoorsClosed() ? Color.RED : Color.GREEN;
+            }
+
             switch (dir) {
                 case NORTH -> {
                     gc.setFill(doorColor);
@@ -123,6 +131,7 @@ public class RoomRenderer {
             case DAMAGE -> gc.setFill(Color.BLUE);
             case SPEED -> gc.setFill(Color.GREEN);
             case TEARS_SIZE -> gc.setFill(Color.PURPLE);
+            case KEY -> gc.setFill(Color.GOLD);
         }
         gc.fillRect(rewardX - tileSize/4, rewardY - tileSize/4, tileSize/2, tileSize/2);
     }

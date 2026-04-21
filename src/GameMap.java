@@ -279,7 +279,67 @@ public class GameMap {
             }
         }
 
+        // Lock doors to ITEM room
+        lockItemRoomDoorsAfterGeneration();
+
         dumpLayoutToFile("after_connect", targetRooms, roomsCount);
+    }
+
+    // Locks all doors that lead to the ITEM room and unlocks them from the ITEM room's neighbors
+    private void lockItemRoomDoorsAfterGeneration() {
+        Room itemRoom = null;
+        int itemRoomX = -1, itemRoomY = -1;
+
+        // Find the ITEM room
+        for (int i = 0; i < GRID_SIZE; i++) {
+            for (int j = 0; j < GRID_SIZE; j++) {
+                if (grid[i][j] != null && grid[i][j].getType() == RoomType.ITEM) {
+                    itemRoom = grid[i][j];
+                    itemRoomX = i;
+                    itemRoomY = j;
+                    break;
+                }
+            }
+            if (itemRoom != null) break;
+        }
+
+        if (itemRoom == null) return; // No item room found
+
+        // Lock doors from neighbors to the ITEM room
+        Room[] neighbors = new Room[4];
+        Direction[] itemRoomDirs = { Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST };
+        Direction[] neighborDirs = { Direction.SOUTH, Direction.NORTH, Direction.WEST, Direction.EAST };
+        int[][] neighborCoords = {
+            { itemRoomX, itemRoomY - 1 },      // NORTH
+            { itemRoomX, itemRoomY + 1 },      // SOUTH
+            { itemRoomX + 1, itemRoomY },      // EAST
+            { itemRoomX - 1, itemRoomY }       // WEST
+        };
+
+        for (int i = 0; i < 4; i++) {
+            int nx = neighborCoords[i][0];
+            int ny = neighborCoords[i][1];
+
+            if (isInsideGrid(nx, ny)) {
+                neighbors[i] = grid[nx][ny];
+                if (neighbors[i] != null) {
+                    // Lock the correct side of the connection in both rooms
+                    neighbors[i].lockDoor(neighborDirs[i]);
+                    itemRoom.lockDoor(itemRoomDirs[i]);
+                }
+            }
+        }
+    }
+
+    // Helper: returns the opposite direction
+    private Direction getOppositeDirection(Direction dir) {
+        return switch (dir) {
+            case NORTH -> Direction.SOUTH;
+            case SOUTH -> Direction.NORTH;
+            case EAST -> Direction.WEST;
+            case WEST -> Direction.EAST;
+            default -> null;
+        };
     }
 
     private void dumpLayoutToFile(String phase, int targetRooms, int roomsCount) {
@@ -618,6 +678,55 @@ public class GameMap {
     // Returns the width of a room in pixels
     public int getWidth() {
         return ROOM_SIZE * TILE_SIZE;
+    }
+
+    // Unlocks a door in the current room if the player has the required key
+    public boolean unlockDoorWithKey(Direction dir, Player player) {
+        Room room = getCurrentRoom();
+        if (room == null || player == null) return false;
+
+        // Check if the door in this direction is locked
+        if (!room.isDoorDirectionLocked(dir)) {
+            return true; // Door is not locked
+        }
+
+        if (player.useKey()) {
+            // Unlock the door and consume one key
+            room.unlockDoor(dir);
+
+            Room adjacentRoom = getAdjacentRoom(room, dir);
+            if (adjacentRoom != null) {
+                Direction oppositeDir = getOppositeDirection(dir);
+                if (oppositeDir != null) {
+                    adjacentRoom.unlockDoor(oppositeDir);
+                }
+            }
+
+            return true; // Successfully unlocked
+        }
+
+        return false; // Player doesn't have the required key
+    }
+
+    // Checks if a door in a direction is locked
+    public boolean isDoorLocked(Direction dir) {
+        Room room = getCurrentRoom();
+        if (room == null) return false;
+        return room.isDoorDirectionLocked(dir);
+    }
+
+    // Returns the neighboring room in the given direction from the provided room
+    private Room getAdjacentRoom(Room room, Direction dir) {
+        int x = room.getX();
+        int y = room.getY();
+
+        return switch (dir) {
+            case NORTH -> isInsideGrid(x, y - 1) ? grid[x][y - 1] : null;
+            case SOUTH -> isInsideGrid(x, y + 1) ? grid[x][y + 1] : null;
+            case EAST -> isInsideGrid(x + 1, y) ? grid[x + 1][y] : null;
+            case WEST -> isInsideGrid(x - 1, y) ? grid[x - 1][y] : null;
+            default -> null;
+        };
     }
 
 }

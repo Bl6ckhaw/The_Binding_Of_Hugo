@@ -16,6 +16,7 @@ public class Room {
     private int x;                        // Room's grid X coordinate
     private int y;                        // Room's grid Y coordinate
     private boolean doorsClosed;          // True if doors are currently closed
+    private boolean doorLocked;           // True if doors are locked (e.g. boss room)
     private boolean isCompleted;          // True if room has been cleared of enemies
     private Set<Enemy> enemies;           // Set of enemies in this room
     private static final int ROOM_SIZE = 11; // Number of tiles per room (11x11)
@@ -31,6 +32,9 @@ public class Room {
     // marque si la room a été chargée depuis un prefab (layout)
     private boolean prefabLoaded = false;
 
+    // Doors that are currently locked in this room
+    private Set<Direction> lockedDoors = EnumSet.noneOf(Direction.class);
+
     public boolean isPrefabLoaded() { return prefabLoaded; }
 
 
@@ -43,6 +47,7 @@ public class Room {
         this.isCompleted = false;
         this.enemies = new HashSet<>();
         this.walls = new ArrayList<>();
+        this.lockedDoors = EnumSet.noneOf(Direction.class);
 
         
     }
@@ -160,6 +165,32 @@ public class Room {
     // Sets the door state (closed/open)
     public void setDoorsClosed(boolean doorsClosed) {
         this.doorsClosed = doorsClosed;
+    }
+
+    public boolean isDoorLocked(){
+        return doorLocked;
+    }
+
+    // LOCKED DOORS WITH KEYS
+
+    // Locks a door in a given direction
+    public void lockDoor(Direction dir) {
+        lockedDoors.add(dir);
+    }
+
+    // Unlocks a door in a given direction
+    public void unlockDoor(Direction dir) {
+        lockedDoors.remove(dir);
+    }
+
+    // Returns true if a door in the given direction is locked
+    public boolean isDoorDirectionLocked(Direction dir) {
+        return lockedDoors.contains(dir);
+    }
+
+    // Returns all locked directions in this room
+    public Set<Direction> getLockedDoors() {
+        return Collections.unmodifiableSet(lockedDoors);
     }
 
     // ENEMIES
@@ -288,14 +319,16 @@ public class Room {
         int randomNum = (int) (Math.random() * 100);
         switch (roomType) {
             case NORMAL :
-                if (randomNum < 65) {
+                if (randomNum < 25) {
                     reward = new Reward(RewardType.HEALTH);
-                } else if (randomNum < 85) {
+                } else if (randomNum < 45) {
+                    reward = new Reward(RewardType.DAMAGE);
+                } else if (randomNum < 65) {
                     reward = new Reward(RewardType.SPEED);
-                } else if (randomNum < 99) {
+                } else if (randomNum < 80) {
                     reward = new Reward(RewardType.TEARS_SIZE);
                 } else {
-                    reward = new Reward(RewardType.DAMAGE);
+                    reward = new Reward(RewardType.KEY);
                 }
                 break;
             case BOSS :

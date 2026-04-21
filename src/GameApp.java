@@ -191,19 +191,29 @@ public class GameApp extends Application {
                         System.err.println("[DEBUG] Player collected reward: " + reward.getType());
                         switch (reward.getType()) {
                             case HEALTH:
-                                player.heal();
+                                if (player.getHealth() < player.getMaxHealth()) {
+                                    player.heal();
+                                    currentRoom.setRewards(null);
+                                }
                                 break;
                             case DAMAGE:
                                 player.increaseDamage();
+                                currentRoom.setRewards(null);
                                 break;
                             case SPEED:
                                 player.increaseSpeed();
+                                currentRoom.setRewards(null);
                                 break;
                             case TEARS_SIZE:
                                 player.increaseTearsSize();
+                                currentRoom.setRewards(null);
+                                break;
+                            case KEY:
+                                player.addKey();
+                                currentRoom.setRewards(null);
                                 break;
                         }
-                        currentRoom.setRewards(null); // Remove the reward (it will no longer be displayed or collectible)
+                         // Remove the reward (it will no longer be displayed or collectible)
                         
                         // show player's stats in console
                         System.err.println("[DEBUG] Player stats - Health: " + player.getHealth() +
@@ -266,7 +276,7 @@ public class GameApp extends Application {
                     roomRenderer.renderTrap(currentRoom.getTrap());
                 }
 
-                uiManager.render(player, currentLevel, collectedItems);
+                uiManager.render(player, currentLevel, collectedItems, player.getKeyCount());
             }
         };
         gameLoop.start();
@@ -369,7 +379,17 @@ public class GameApp extends Application {
         Direction nearDoor = gameMap.isPlayerNearDoor(player.getX(), player.getY());
 
         if (nearDoor != null) {
-            // Player is near a door
+            // Check if the door is locked
+            if (gameMap.isDoorLocked(nearDoor)) {
+                // Try to unlock with a key
+                if (!gameMap.unlockDoorWithKey(nearDoor, player)) {
+                    // Door is locked and player doesn't have the key - can't proceed
+                    gameMap.resetNextRoom();
+                    return; // Exit early, don't set next room
+                }
+            }
+
+            // Player is near a door (and not blocked by a lock)
             if (gameMap.getNextRoom() == null) {
                 // First time near this door, set next room
                 gameMap.setNextRoom(nearDoor);
@@ -394,10 +414,6 @@ public class GameApp extends Application {
 
             // Load the new room's enemies into the EnemyManager
             Room newRoom = gameMap.getCurrentRoom();
-            // Ajoute le boss si c'est une salle boss et qu'il n'y en a pas déjà
-            if (newRoom.getType() == RoomType.BOSS && newRoom.getEnemies().stream().noneMatch(e -> e instanceof BossEnemy)) {
-                newRoom.addEnemy(new BossEnemy(5 * 32 + 16, 5 * 32 + 16));
-            }
             enemyManager.setEnemies(new java.util.ArrayList<>(newRoom.getEnemies()));
 
             // Isaac-like: close doors if room is not clear (except start/boss)
