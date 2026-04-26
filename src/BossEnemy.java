@@ -2,7 +2,7 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
 public class BossEnemy extends Enemy {
-    private static final boolean TEST_PASSIVE_BOSS = true;
+    private static final boolean TEST_PASSIVE_BOSS = false;
     private int attackCooldown = 0;
     private static final int MAX_COOLDOWN = 180; // 3 secondes à 60 FPS
 
@@ -49,8 +49,8 @@ public class BossEnemy extends Enemy {
 
     @Override
     public void render(GraphicsContext gc, double tileSize, double offsetX, double offsetY) {
-        double x = offsetX + (getX() / (11 * 32)) * (tileSize * 11);
-        double y = offsetY + (getY() / (11 * 32)) * (tileSize * 11);
+        double x = offsetX + (getX() / MapDimensions.ROOM_PIXEL_SIZE) * (tileSize * MapDimensions.ROOM_SIZE);
+        double y = offsetY + (getY() / MapDimensions.ROOM_PIXEL_SIZE) * (tileSize * MapDimensions.ROOM_SIZE);
         double size = tileSize * 1.2; // plus gros que les autres ennemis
         gc.setFill(Color.DARKVIOLET);
         gc.fillOval(x - size/2, y - size/2, size, size);

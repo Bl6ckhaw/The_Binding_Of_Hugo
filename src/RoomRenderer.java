@@ -6,11 +6,11 @@ import javafx.scene.paint.Color;
  * Handles rendering of a room, its walls, doors, and the player.
  */
 public class RoomRenderer {
-    private Canvas canvas;
-    private GraphicsContext gc;
-    private static final int TILE_SIZE = 32;
-    private static final int ROOM_SIZE = 11; // Number of tiles per room (11x11 grid)
-    private static final int DOOR_POSITION = 5; // Door is in the middle of the wall (11/2 = 5)
+    private final Canvas canvas;
+    private final GraphicsContext gc;
+    private static final int TILE_SIZE = MapDimensions.TILE_SIZE;
+    private static final int ROOM_SIZE = MapDimensions.ROOM_SIZE;
+    private static final int DOOR_POSITION = MapDimensions.DOOR_POSITION;
     
     public RoomRenderer(Canvas canvas){
         this.canvas = canvas;
@@ -75,11 +75,14 @@ public class RoomRenderer {
                     gc.setFill(doorColor);
                     gc.fillRect(offsetX, offsetY + DOOR_POSITION * tileSize, tileSize, tileSize);
                 }
+                case NORTH_EAST, NORTH_WEST, SOUTH_EAST, SOUTH_WEST -> {
+                    // Doors are rendered for cardinal directions only.
+                }
             }
         }
         // Adapt player position to room scale
-        renderPlayer(offsetX + (playerX / (ROOM_SIZE * 32)) * (tileSize * ROOM_SIZE),
-                     offsetY + (playerY / (ROOM_SIZE * 32)) * (tileSize * ROOM_SIZE),
+        renderPlayer(offsetX + (playerX / MapDimensions.ROOM_PIXEL_SIZE) * (tileSize * ROOM_SIZE),
+                     offsetY + (playerY / MapDimensions.ROOM_PIXEL_SIZE) * (tileSize * ROOM_SIZE),
                      tileSize, tileSize);
     }
 
@@ -117,14 +120,13 @@ public class RoomRenderer {
         if (rewards == null) return;
         double width = canvas.getWidth();
         double height = canvas.getHeight();
-        int ROOM_SIZE = 11;
         double tileSize = Math.min(width, height) / ROOM_SIZE;
         double offsetX = (width - tileSize * ROOM_SIZE) / 2;
         double offsetY = (height - tileSize * ROOM_SIZE) / 2;
 
         // Position reward en pixels salle
-        double rewardX = offsetX + (rewards.getX() / (ROOM_SIZE * 32)) * (tileSize * ROOM_SIZE);
-        double rewardY = offsetY + (rewards.getY() / (ROOM_SIZE * 32)) * (tileSize * ROOM_SIZE);
+        double rewardX = offsetX + (rewards.getX() / MapDimensions.ROOM_PIXEL_SIZE) * (tileSize * ROOM_SIZE);
+        double rewardY = offsetY + (rewards.getY() / MapDimensions.ROOM_PIXEL_SIZE) * (tileSize * ROOM_SIZE);
 
         switch (rewards.getType()) {
             case HEALTH -> gc.setFill(Color.RED);
@@ -145,8 +147,8 @@ public class RoomRenderer {
         double offsetX = (width - tileSize * ROOM_SIZE) / 2;
         double offsetY = (height - tileSize * ROOM_SIZE) / 2;
 
-        double itemX = offsetX + (item.getX() / (ROOM_SIZE * 32)) * (tileSize * ROOM_SIZE);
-        double itemY = offsetY + (item.getY() / (ROOM_SIZE * 32)) * (tileSize * ROOM_SIZE);
+        double itemX = offsetX + (item.getX() / MapDimensions.ROOM_PIXEL_SIZE) * (tileSize * ROOM_SIZE);
+        double itemY = offsetY + (item.getY() / MapDimensions.ROOM_PIXEL_SIZE) * (tileSize * ROOM_SIZE);
 
         switch (item.getDefinition().getRarity()) {
             case COMMON -> gc.setFill(Color.LIGHTGREEN);
@@ -163,7 +165,6 @@ public class RoomRenderer {
         
         double width = canvas.getWidth();
         double height = canvas.getHeight();
-        final int ROOM_SIZE = 11;
         double tileSize = Math.min(width, height) / ROOM_SIZE;
         double offsetX = (width - tileSize * ROOM_SIZE) / 2;
         double offsetY = (height - tileSize * ROOM_SIZE) / 2;

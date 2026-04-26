@@ -11,19 +11,19 @@ import java.util.stream.Collectors;
 
 
 public class GameMap {
-    private static final int GRID_SIZE = 8; // Number of rooms per row/column (3x3 grid)
+    private static final int GRID_SIZE = MapDimensions.GRID_SIZE;
     private static final int MIN_ROOMS = 5;
-    private static final int TILE_SIZE = 32; // Size of each tile in pixels
-    private static final int ROOM_SIZE = 11; // Number of tiles per room (11x11 grid)
-    private static final int DOOR_POSITION = 5; // Door is in the middle of the wall (11/2 = 5)
-    private Room[][] grid;
+    private static final int TILE_SIZE = MapDimensions.TILE_SIZE;
+    private static final int ROOM_SIZE = MapDimensions.ROOM_SIZE;
+    private static final int DOOR_POSITION = MapDimensions.DOOR_POSITION;
+    private final Room[][] grid;
     private int playerX;
     private int playerY;
     private Room startRoom;
     private Room bossRoom;
     private Room currentRoom;
     private Room nextRoom;
-    private ProjectileManager projectileManager;
+    private final ProjectileManager projectileManager;
 
     public GameMap(ProjectileManager projectileManager) {
         this.projectileManager = projectileManager;
@@ -531,6 +531,8 @@ public class GameMap {
                 case SOUTH -> playerY++;
                 case EAST -> playerX++;
                 case WEST -> playerX--;
+                case NORTH_EAST, NORTH_WEST, SOUTH_EAST, SOUTH_WEST ->
+                    throw new IllegalArgumentException("Diagonal room movement is not supported");
             }
         } else {
             throw new IllegalArgumentException("Cannot move in that direction");
@@ -572,6 +574,9 @@ public class GameMap {
                         return Direction.WEST;
                     }
                 }
+                case NORTH_EAST, NORTH_WEST, SOUTH_EAST, SOUTH_WEST -> {
+                    // Doors are cardinal only.
+                }
             }
         }
         return null; // No door nearby
@@ -586,6 +591,8 @@ public class GameMap {
             case SOUTH -> newY++;
             case EAST -> newX++;
             case WEST -> newX--;
+            case NORTH_EAST, NORTH_WEST, SOUTH_EAST, SOUTH_WEST ->
+                throw new IllegalArgumentException("Diagonal room movement is not supported");
         }
         
         // Check if the new coordinates are valid

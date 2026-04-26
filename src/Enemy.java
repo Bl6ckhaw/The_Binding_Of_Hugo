@@ -26,8 +26,8 @@ public abstract class Enemy {
 
     // Render the enemy on the canvas
     public void render(GraphicsContext gc, double tileSize, double offsetX, double offsetY) {
-        double x = offsetX + (getX() / (11 * 32)) * (tileSize * 11);
-        double y = offsetY + (getY() / (11 * 32)) * (tileSize * 11);
+        double x = offsetX + (getX() / MapDimensions.ROOM_PIXEL_SIZE) * (tileSize * MapDimensions.ROOM_SIZE);
+        double y = offsetY + (getY() / MapDimensions.ROOM_PIXEL_SIZE) * (tileSize * MapDimensions.ROOM_SIZE);
         double size = tileSize * 0.8; // exemple : 80% d'une tuile
         gc.setFill(Color.DARKRED);
         gc.fillOval(x - size/2, y - size/2, size, size);

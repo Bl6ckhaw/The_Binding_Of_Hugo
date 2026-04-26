@@ -10,7 +10,7 @@ import javafx.scene.paint.Color;
  */
 public class ProjectileManager {
     private List<Projectile> projectiles;
-    private static final int PLAYER_SIZE = 32; // Used for collision with player
+    private static final int PLAYER_SIZE = MapDimensions.TILE_SIZE; // Used for collision with player
     private Color projectileColor; // Color of the projectiles
 
     public ProjectileManager() {
@@ -45,9 +45,9 @@ public class ProjectileManager {
     // Renders all projectiles
     public void render(GraphicsContext gc, double tileSize, double offsetX, double offsetY) {
         for (Projectile p : projectiles) {
-            double x = offsetX + (p.getX() / (11 * 32)) * (tileSize * 11);
-            double y = offsetY + (p.getY() / (11 * 32)) * (tileSize * 11);
-            double size = (p.getSize() / 32.0) * tileSize; // taille relative à une tuile
+            double x = offsetX + (p.getX() / MapDimensions.ROOM_PIXEL_SIZE) * (tileSize * MapDimensions.ROOM_SIZE);
+            double y = offsetY + (p.getY() / MapDimensions.ROOM_PIXEL_SIZE) * (tileSize * MapDimensions.ROOM_SIZE);
+            double size = (p.getSize() / (double) MapDimensions.TILE_SIZE) * tileSize;
             gc.setFill(p.getOwner() == ProjectileOwner.PLAYER ? Color.BLACK : Color.ORANGE);
             gc.fillOval(x - size/2, y - size/2, size, size);
         }

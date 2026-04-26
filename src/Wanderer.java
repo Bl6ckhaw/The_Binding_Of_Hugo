@@ -68,8 +68,8 @@ public class Wanderer extends Enemy {
         if (isAlive) {
             Color wandererColor = Color.PINK;
             gc.setFill(wandererColor);
-            double dx = offsetX + (x / (11 * 32)) * (tileSize * 11);
-            double dy = offsetY + (y / (11 * 32)) * (tileSize * 11);
+            double dx = offsetX + (x / MapDimensions.ROOM_PIXEL_SIZE) * (tileSize * MapDimensions.ROOM_SIZE);
+            double dy = offsetY + (y / MapDimensions.ROOM_PIXEL_SIZE) * (tileSize * MapDimensions.ROOM_SIZE);
             double size = tileSize * 0.8; // Example: 80% of a tile
             gc.fillOval(dx - size / 2, dy - size / 2, size, size); // Centered drawing
         }

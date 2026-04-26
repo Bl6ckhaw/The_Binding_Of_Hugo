@@ -10,7 +10,7 @@ import java.util.Set;
  * Stores its type, doors, enemies, and completion/door state.
  */
 public class Room {
-    private static final boolean TEST_DISABLE_NORMAL_ENEMIES = true;
+    private static final boolean TEST_DISABLE_NORMAL_ENEMIES = false;
     private RoomType type;                // Room type (START, NORMAL, BOSS)
     private Set<Direction> directions;    // Directions where doors exist
     private int x;                        // Room's grid X coordinate
@@ -19,8 +19,8 @@ public class Room {
     private boolean doorLocked;           // True if doors are locked (e.g. boss room)
     private boolean isCompleted;          // True if room has been cleared of enemies
     private Set<Enemy> enemies;           // Set of enemies in this room
-    private static final int ROOM_SIZE = 11; // Number of tiles per room (11x11)
-    private static final int TILE_SIZE = 32; // Size of a tile in pixels
+    private static final int ROOM_SIZE = MapDimensions.ROOM_SIZE;
+    private static final int TILE_SIZE = MapDimensions.TILE_SIZE;
     private Reward reward; // Set of rewards available in this room
     private ItemInstance itemInstance; // One item instance for ITEM rooms
     private Trap trap; // Trap door for boss rooms
@@ -65,8 +65,8 @@ public class Room {
     // check if the position is blocked by a wall
     public boolean isPositionBlocked(double worldX, double worldY) {
         // Convertir les coordonnées monde en coordonnées grille
-        int gridX = (int) (worldX / 32);
-        int gridY = (int) (worldY / 32);
+        int gridX = (int) (worldX / TILE_SIZE);
+        int gridY = (int) (worldY / TILE_SIZE);
         
         // Vérifier si la position est dans un mur
         for (Wall wall : walls) {
@@ -225,7 +225,7 @@ public class Room {
     }
 
     // helper: position de la porte au centre
-    private static final int DOOR_POS = ROOM_SIZE / 2;
+    private static final int DOOR_POS = MapDimensions.DOOR_POSITION;
 
     // Vérifie si une tile (tx,ty) est bloquée par un mur
     private boolean isTileBlocked(int tx, int ty) {
@@ -299,8 +299,8 @@ public class Room {
 
     // Spawn du boss au centre
     public void spawnBoss() {
-        double centerX = 5.5 * 32;
-        double centerY = 5.5 * 32;
+        double centerX = MapDimensions.ROOM_CENTER_X;
+        double centerY = MapDimensions.ROOM_CENTER_Y;
         enemies.add(new BossEnemy(centerX, centerY));
     }
 

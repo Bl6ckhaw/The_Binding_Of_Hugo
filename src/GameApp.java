@@ -43,15 +43,15 @@ public class GameApp extends Application {
 
     
     // Set to manage multiple key presses
-    private Set<KeyCode> pressedKeys = new HashSet<>();
+    private final Set<KeyCode> pressedKeys = new HashSet<>();
     
     // Cooldown for shooting
     private long lastShotTime = 0;
     private final long SHOT_COOLDOWN = 200_000_000; // 200ms in nanoseconds
 
     // Screen dimensions for fullscreen
-    private double screenWidth = Screen.getPrimary().getBounds().getWidth();
-    private double screenHeight = Screen.getPrimary().getBounds().getHeight();
+    private final double screenWidth = Screen.getPrimary().getBounds().getWidth();
+    private final double screenHeight = Screen.getPrimary().getBounds().getHeight();
 
     // current level
     public static int currentLevel = 0;
@@ -90,7 +90,7 @@ public class GameApp extends Application {
                 Stage editorStage = new Stage();
                 editor.start(editorStage);
             } catch (Exception ex) {
-                ex.printStackTrace();
+                System.err.println("Failed to open map editor: " + ex.getMessage());
             }
         });
 
@@ -105,8 +105,6 @@ public class GameApp extends Application {
 
         // Create a canvas for game rendering
         Canvas gameCanvas = new Canvas(screenWidth, screenHeight);
-        // Create UI overlay canvas
-        Canvas uiCanvas = new Canvas(screenWidth, screenHeight);
 
         // Renderer for rooms
         this.roomRenderer = new RoomRenderer(gameCanvas);
@@ -115,7 +113,7 @@ public class GameApp extends Application {
         this.uiManager = new UIManager(screenWidth, screenHeight);
 
         // Initialize player position (center of room)
-        this.player = new Player(5 * 32 + 16, 5 * 32 + 16, 6, 1, 1.0);
+        this.player = new Player(MapDimensions.ROOM_CENTER_X, MapDimensions.ROOM_CENTER_Y, 6, 1, 1.0);
 
         // Manages all projectiles in the game
         this.projectileManager = new ProjectileManager();
@@ -190,28 +188,28 @@ public class GameApp extends Application {
                     if (distance < 15) { // If player is close enough to the reward
                         System.err.println("[DEBUG] Player collected reward: " + reward.getType());
                         switch (reward.getType()) {
-                            case HEALTH:
+                            case HEALTH -> {
                                 if (player.getHealth() < player.getMaxHealth()) {
                                     player.heal();
                                     currentRoom.setRewards(null);
                                 }
-                                break;
-                            case DAMAGE:
+                            }
+                            case DAMAGE -> {
                                 player.increaseDamage();
                                 currentRoom.setRewards(null);
-                                break;
-                            case SPEED:
+                            }
+                            case SPEED -> {
                                 player.increaseSpeed();
                                 currentRoom.setRewards(null);
-                                break;
-                            case TEARS_SIZE:
+                            }
+                            case TEARS_SIZE -> {
                                 player.increaseTearsSize();
                                 currentRoom.setRewards(null);
-                                break;
-                            case KEY:
+                            }
+                            case KEY -> {
                                 player.addKey();
                                 currentRoom.setRewards(null);
-                                break;
+                            }
                         }
                          // Remove the reward (it will no longer be displayed or collectible)
                         
@@ -253,9 +251,9 @@ public class GameApp extends Application {
 
                 double width = gameCanvas.getWidth();
                 double height = gameCanvas.getHeight();
-                double tileSize = Math.min(width, height) / 11.0;
-                double offsetX = (width - tileSize * 11) / 2;
-                double offsetY = (height - tileSize * 11) / 2;
+                double tileSize = Math.min(width, height) / MapDimensions.ROOM_SIZE;
+                double offsetX = (width - tileSize * MapDimensions.ROOM_SIZE) / 2;
+                double offsetY = (height - tileSize * MapDimensions.ROOM_SIZE) / 2;
 
                                
 
@@ -431,8 +429,8 @@ public class GameApp extends Application {
     
     // Determines the actual exit direction based on player position
     private Direction getActualExitDirection(double playerX, double playerY) {
-        final int TILE_SIZE = 32;
-        final int ROOM_SIZE = 11;
+        final int TILE_SIZE = MapDimensions.TILE_SIZE;
+        final int ROOM_SIZE = MapDimensions.ROOM_SIZE;
 
         if (playerY < TILE_SIZE) return Direction.NORTH;
         if (playerY > (ROOM_SIZE - 1) * TILE_SIZE) return Direction.SOUTH;
@@ -523,12 +521,16 @@ public class GameApp extends Application {
             tryCompleteLevelTransition();
         });
         transitionPlayer.setOnError(() -> {
-            System.err.println("[DEBUG] Transition video error: " + transitionPlayer.getError());
+            Throwable transitionError = transitionPlayer.getError();
+            String message = transitionError != null ? transitionError.getMessage() : "unknown error";
+            System.err.println("[DEBUG] Transition video error: " + message);
             transitionVideoEnded = true;
             tryCompleteLevelTransition();
         });
         media.setOnError(() -> {
-            System.err.println("[DEBUG] Media loading error: " + media.getError());
+            Throwable mediaError = media.getError();
+            String message = mediaError != null ? mediaError.getMessage() : "unknown error";
+            System.err.println("[DEBUG] Media loading error: " + message);
             transitionVideoEnded = true;
             tryCompleteLevelTransition();
         });
@@ -593,7 +595,7 @@ public class GameApp extends Application {
         enemyManager.setEnemies(new java.util.ArrayList<>(startRoom.getEnemies()));
         startRoom.setDoorsClosed(false);
 
-        player.setPosition(5 * 32 + 16, 5 * 32 + 16);
+        player.setPosition((int) MapDimensions.ROOM_CENTER_X, (int) MapDimensions.ROOM_CENTER_Y);
         transitionVideoEnded = false;
         transitionMinTimeElapsed = false;
         transitionInProgress = false;

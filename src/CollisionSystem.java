@@ -1,10 +1,10 @@
 public class CollisionSystem {
-    private static final int TILE_SIZE = 32; // Size of each tile in pixels
-    private static final int PLAYER_SIZE = 16; // Size of the player in pixels (TILE_SIZE/2)
-    private static final int ENEMY_SIZE = 16; // Size of enemies in pixels
-    private static final int PROJECTILE_SIZE = 4; // Size of projectiles in pixels
-    private static final int ROOM_SIZE = 11; // Number of tiles per room (11x11 grid)
-    private static final int DOOR_POSITION = 5; // Door is in the middle of the wall (11/2 = 5)
+    private static final int TILE_SIZE = MapDimensions.TILE_SIZE;
+    private static final int PLAYER_SIZE = MapDimensions.PLAYER_SIZE;
+    private static final int ENEMY_SIZE = MapDimensions.ENEMY_SIZE;
+    private static final int PROJECTILE_SIZE = MapDimensions.PROJECTILE_HITBOX_SIZE;
+    private static final int ROOM_SIZE = MapDimensions.ROOM_SIZE;
+    private static final int DOOR_POSITION = MapDimensions.DOOR_POSITION;
 
     /**
      * Checks if can move

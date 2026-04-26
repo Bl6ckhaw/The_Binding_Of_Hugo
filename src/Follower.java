@@ -51,8 +51,8 @@ public class Follower extends Enemy {
     @Override
     public void render(GraphicsContext gc, double tileSize, double offsetX, double offsetY) {
         if (isAlive) {
-            double dx = offsetX + (getX() / (11 * 32)) * (tileSize * 11);
-            double dy = offsetY + (getY() / (11 * 32)) * (tileSize * 11);
+            double dx = offsetX + (getX() / MapDimensions.ROOM_PIXEL_SIZE) * (tileSize * MapDimensions.ROOM_SIZE);
+            double dy = offsetY + (getY() / MapDimensions.ROOM_PIXEL_SIZE) * (tileSize * MapDimensions.ROOM_SIZE);
             double size = tileSize * 0.8; // Example: 80% of a tile
             Color followerColor = Color.PURPLE;
             gc.setFill(followerColor);

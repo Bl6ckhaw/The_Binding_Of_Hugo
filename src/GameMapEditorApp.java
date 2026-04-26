@@ -30,8 +30,8 @@ public class GameMapEditorApp extends Application {
     private Room currentRoom;
     private Stage primaryStage;
     private ComboBox<String> toolSelector;
-    private static final int TILE_SIZE = 32;
-    private static final int ROOM_SIZE = 11;
+    private static final int TILE_SIZE = MapDimensions.TILE_SIZE;
+    private static final int ROOM_SIZE = MapDimensions.ROOM_SIZE;
     
     // Current selected tool
     private String selectedTool = "Wall";
@@ -145,12 +145,10 @@ public class GameMapEditorApp extends Application {
         
         // Apply the selected tool
         switch (selectedTool) {
-            case "Wall":
-                addWall(gridX, gridY);
-                break;
-            case "Remove Wall":
-                removeWall(gridX, gridY);
-                break;
+            case "Wall" -> addWall(gridX, gridY);
+            case "Remove Wall" -> removeWall(gridX, gridY);
+            default -> {
+            }
         }
         
         renderRoom();
@@ -160,8 +158,8 @@ public class GameMapEditorApp extends Application {
         // Don't add walls on the border or door positions
         if (gridX <= 0 || gridX >= ROOM_SIZE - 1 || 
             gridY <= 0 || gridY >= ROOM_SIZE - 1 || 
-            (gridX == 5 && (gridY == 1 || gridY == ROOM_SIZE - 2)) || 
-            (gridY == 5 && (gridX == 1 || gridX == ROOM_SIZE - 2))) {
+            (gridX == MapDimensions.DOOR_POSITION && (gridY == 1 || gridY == ROOM_SIZE - 2)) || 
+            (gridY == MapDimensions.DOOR_POSITION && (gridX == 1 || gridX == ROOM_SIZE - 2))) {
             return;
         }
         
@@ -224,7 +222,6 @@ public class GameMapEditorApp extends Application {
             MapIO.saveRoom(currentRoom, out);
             System.out.println("Room saved to " + out.toAbsolutePath());
         } catch (IOException e) {
-            e.printStackTrace();
             System.err.println("Failed to save room: " + e.getMessage());
         }
     }
@@ -245,7 +242,6 @@ public class GameMapEditorApp extends Application {
             System.out.println("Room loaded from " + file.toPath().toAbsolutePath());
             renderRoom();
         } catch (IOException e) {
-            e.printStackTrace();
             System.err.println("Failed to load room: " + e.getMessage());
         }
     }
