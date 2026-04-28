@@ -10,7 +10,6 @@ import javafx.scene.paint.Color;
  */
 public class ProjectileManager {
     private List<Projectile> projectiles;
-    private static final int PLAYER_SIZE = MapDimensions.TILE_SIZE; // Used for collision with player
     private Color projectileColor; // Color of the projectiles
 
     public ProjectileManager() {
@@ -35,21 +34,21 @@ public class ProjectileManager {
         Iterator<Projectile> iterator = projectiles.iterator();
         while (iterator.hasNext()) {
             Projectile p = iterator.next();
-            // Use CollisionSystem to check for wall collisions
-            if (!CollisionSystem.canPlayerMoveTo(p.getX(), p.getY(), currentRoom)) {
+            // Use the projectile-specific collision check instead of the player hitbox
+            if (!CollisionSystem.canProjectileMoveTo(p.getX(), p.getY(), currentRoom)) {
                 iterator.remove();
             }
         }
     }
 
-    // Renders all projectiles
+    // Renders all projectiles at transformed screen coordinates
     public void render(GraphicsContext gc, double tileSize, double offsetX, double offsetY) {
         for (Projectile p : projectiles) {
-            double x = offsetX + (p.getX() / MapDimensions.ROOM_PIXEL_SIZE) * (tileSize * MapDimensions.ROOM_SIZE);
-            double y = offsetY + (p.getY() / MapDimensions.ROOM_PIXEL_SIZE) * (tileSize * MapDimensions.ROOM_SIZE);
+            double screenX = offsetX + (p.getX() / MapDimensions.ROOM_PIXEL_SIZE) * (tileSize * MapDimensions.ROOM_SIZE);
+            double screenY = offsetY + (p.getY() / MapDimensions.ROOM_PIXEL_SIZE) * (tileSize * MapDimensions.ROOM_SIZE);
             double size = (p.getSize() / (double) MapDimensions.TILE_SIZE) * tileSize;
             gc.setFill(p.getOwner() == ProjectileOwner.PLAYER ? Color.BLACK : Color.ORANGE);
-            gc.fillOval(x - size/2, y - size/2, size, size);
+            gc.fillOval(screenX - size/2, screenY - size/2, size, size);
         }
     }
 
@@ -66,7 +65,7 @@ public class ProjectileManager {
             if (p.getTarget() == ProjectileTarget.PLAYER) {
                 double distance = Math.hypot(p.getX() - player.getX(), p.getY() - player.getY());
                 // 20% more tolerant collision radius
-                if (distance < (p.getSize() / 2 + PLAYER_SIZE / 2) * 1.2) {
+                if (distance < (p.getSize() / 2 + player.getCollisionSize() / 2.0) * 1.2) {
                     player.takeDamage(p.getDamage());
                     iterator.remove(); // Remove the projectile after collision
                 }

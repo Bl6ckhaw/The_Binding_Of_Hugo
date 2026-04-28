@@ -12,7 +12,11 @@ public class BossEnemy extends Enemy {
         super(x, y, 50, 5, 0); // Beaucoup de vie, gros dégâts, vitesse nulle (statique)
     }
 
-    
+    @Override
+    public int getCollisionSize() {
+        return MapDimensions.BOSS_SIZE;
+    }
+
     @Override
     public void update(Player player, ProjectileManager projectileManager, GameMap gameMap) {
         if (TEST_PASSIVE_BOSS) {
@@ -48,18 +52,21 @@ public class BossEnemy extends Enemy {
 }
 
     @Override
-    public void render(GraphicsContext gc, double tileSize, double offsetX, double offsetY) {
-        double x = offsetX + (getX() / MapDimensions.ROOM_PIXEL_SIZE) * (tileSize * MapDimensions.ROOM_SIZE);
-        double y = offsetY + (getY() / MapDimensions.ROOM_PIXEL_SIZE) * (tileSize * MapDimensions.ROOM_SIZE);
-        double size = tileSize * 1.2; // plus gros que les autres ennemis
+    protected double getRenderSize(double tileSize) {
+        return tileSize * MapDimensions.BOSS_RENDER_SCALE;
+    }
+
+    @Override
+    public void render(GraphicsContext gc, double screenX, double screenY, double tileSize) {
+        double size = getRenderSize(tileSize);
         gc.setFill(Color.DARKVIOLET);
-        gc.fillOval(x - size/2, y - size/2, size, size);
+        gc.fillOval(screenX - size/2, screenY - size/2, size, size);
         // Barre de vie du boss
         gc.setFill(Color.RED);
         double lifeRatio = Math.max(0, getHealth() / 50.0);
-        gc.fillRect(x - size/2, y - size/2 - 10, size * lifeRatio, 8);
+        gc.fillRect(screenX - size/2, screenY - size/2 - 10, size * lifeRatio, 8);
         gc.setStroke(Color.BLACK);
-        gc.strokeRect(x - size/2, y - size/2 - 10, size, 8);
+        gc.strokeRect(screenX - size/2, screenY - size/2 - 10, size, 8);
     }
 
     

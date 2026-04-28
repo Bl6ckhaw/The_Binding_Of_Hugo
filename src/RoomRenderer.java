@@ -111,8 +111,8 @@ public class RoomRenderer {
     public void renderPlayer(double playerX, double playerY, double tileWidth, double tileHeight){
         Color playerColor = Color.BLACK;
         gc.setFill(playerColor);
-        double playerSize = Math.min(tileWidth, tileHeight) / 2;
-        gc.fillOval(playerX - playerSize/2, playerY - playerSize/2, playerSize, playerSize);
+        double playerSize = tileWidth * MapDimensions.PLAYER_RENDER_SCALE;
+        gc.fillOval(playerX - playerSize / 2, playerY - playerSize / 2, playerSize, playerSize);
     }
 
     // Renders rewards (e.g. hearts, coins) at the specified coordinates

@@ -7,18 +7,10 @@ import javafx.scene.paint.Color;
 public class StaticShooter extends Enemy {
     private static final long SHOOT_COOLDOWN = 2_000_000_000; // 2 seconds in nanoseconds
     private long lastShotTime = 0;
-    private ProjectileManager projectileManager;
-    private int health;
-    private int damage;
-    private double x, y;
-    private static final double SIZE = 32 / 1.5;
+    private final ProjectileManager projectileManager;
 
     public StaticShooter(double x, double y, int health, int damage, ProjectileManager projectileManager) {
         super(x, y, health, damage, 0);
-        this.x = x;
-        this.y = y;
-        this.health = health;
-        this.damage = damage;
         this.projectileManager = projectileManager;
     }
 
@@ -54,7 +46,7 @@ public class StaticShooter extends Enemy {
                 direction = player.getX() > this.x ? Direction.EAST : Direction.WEST;
             }
             
-            Projectile projectile = new Projectile(this.x, this.y, damage, 2, 10, direction, 
+            Projectile projectile = new Projectile(this.x, this.y, damage, 2.0, 10.0, direction, 
                                                   ProjectileOwner.ENEMY,    // Fired by enemy
                                                   ProjectileTarget.PLAYER); // Targets the player
             projectileManager.addProjectile(projectile);
@@ -63,14 +55,12 @@ public class StaticShooter extends Enemy {
     }
 
     @Override
-    public void render(GraphicsContext gc, double tileSize, double offsetX, double offsetY) {
+    public void render(GraphicsContext gc, double screenX, double screenY, double tileSize) {
         if (isAlive) {
             Color shooterColor = Color.RED;
             gc.setFill(shooterColor);
-            double dx = offsetX + (x / MapDimensions.ROOM_PIXEL_SIZE) * (tileSize * MapDimensions.ROOM_SIZE);
-            double dy = offsetY + (y / MapDimensions.ROOM_PIXEL_SIZE) * (tileSize * MapDimensions.ROOM_SIZE);
-            double size = tileSize * 0.8; // Example: 80% of a tile
-            gc.fillOval(dx - size / 2, dy - size / 2, size, size); // Centered
+            double size = tileSize * MapDimensions.ENEMY_RENDER_SCALE;
+            gc.fillOval(screenX - size / 2, screenY - size / 2, size, size);
         }
     }
 }

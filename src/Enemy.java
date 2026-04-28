@@ -24,13 +24,19 @@ public abstract class Enemy {
     // Abstract method to update enemy state - signature corrigée pour correspondre aux classes filles
     public abstract void update(Player player, ProjectileManager projectileManager, GameMap gameMap);
 
-    // Render the enemy on the canvas
-    public void render(GraphicsContext gc, double tileSize, double offsetX, double offsetY) {
-        double x = offsetX + (getX() / MapDimensions.ROOM_PIXEL_SIZE) * (tileSize * MapDimensions.ROOM_SIZE);
-        double y = offsetY + (getY() / MapDimensions.ROOM_PIXEL_SIZE) * (tileSize * MapDimensions.ROOM_SIZE);
-        double size = tileSize * 0.8; // exemple : 80% d'une tuile
+    public int getCollisionSize() {
+        return MapDimensions.ENEMY_SIZE;
+    }
+
+    protected double getRenderSize(double tileSize) {
+        return tileSize * MapDimensions.ENEMY_RENDER_SCALE;
+    }
+
+    // Render the enemy on the canvas at screen coordinates
+    public void render(GraphicsContext gc, double screenX, double screenY, double tileSize) {
+        double size = getRenderSize(tileSize);
         gc.setFill(Color.DARKRED);
-        gc.fillOval(x - size/2, y - size/2, size, size);
+        gc.fillOval(screenX - size/2, screenY - size/2, size, size);
     }
 
     // Apply damage to the enemy and update alive state

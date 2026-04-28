@@ -3,6 +3,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
 /**
@@ -249,45 +250,62 @@ public class Room {
         return true;
     }
 
-    // génère un ennemi à une tile libre
-    public Enemy generateRandomEnemy(ProjectileManager projectileManager, GameMap gameMap) {
-        int attempts = 50;
-        while (attempts-- > 0) {
-            int minTile = 3;
-            int maxTile = ROOM_SIZE - 4; // évite trop près des bords
-            int tx = minTile + (int) (Math.random() * (maxTile - minTile + 1));
-            int ty = minTile + (int) (Math.random() * (maxTile - minTile + 1));
+    // Retourne toutes les cases libres où un ennemi peut apparaître
+    public List<int[]> getFreeSpawnTiles() {
+        List<int[]> freeTiles = new ArrayList<>();
 
-            // si la tile est valide, créer l'ennemi au centre de la tile
-            if (isTileValidForSpawn(tx, ty)) {
-                double randomX = tx * TILE_SIZE + TILE_SIZE / 2.0;
-                double randomY = ty * TILE_SIZE + TILE_SIZE / 2.0;
-
-                int numRandom = (int) (Math.random() * 3);
-                switch (numRandom) {
-                    case 0:
-                        return new Wanderer(randomX, randomY, 3, 1, 1.0, gameMap);
-                    case 1:
-                        if (projectileManager != null) {
-                            return new StaticShooter(randomX, randomY, 3, 1, projectileManager);
-                        } else {
-                            return new Wanderer(randomX, randomY, 3, 1, 1.0, gameMap);
-                        }
-                    case 2:
-                        return new Follower(randomX, randomY, 3, 1, 0.5, gameMap);
+        for (int tx = 1; tx < ROOM_SIZE - 1; tx++) {
+            for (int ty = 1; ty < ROOM_SIZE - 1; ty++) {
+                if (isTileValidForSpawn(tx, ty)) {
+                    freeTiles.add(new int[]{tx, ty});
                 }
             }
         }
-        
-        return null;
+
+        return freeTiles;
+    }
+
+    // Convertit une case en position pixel centrée sur cette case
+    public double[] getTileCenterPosition(int tx, int ty) {
+        double centerX = tx * TILE_SIZE + TILE_SIZE / 2.0;
+        double centerY = ty * TILE_SIZE + TILE_SIZE / 2.0;
+        return new double[]{centerX, centerY};
+    }
+    
+    // génère un ennemi à une case libre en utilisant un RNG partagé
+    public Enemy generateRandomEnemy(ProjectileManager projectileManager, GameMap gameMap, Random rng) {
+        List<int[]> freeTiles = getFreeSpawnTiles();
+        if (freeTiles.isEmpty()) {
+            return null;
+        }
+
+        Random effectiveRng = (rng != null) ? rng : new Random();
+        int[] tile = freeTiles.get(effectiveRng.nextInt(freeTiles.size()));
+        double[] spawnPosition = getTileCenterPosition(tile[0], tile[1]);
+
+        int numRandom = effectiveRng.nextInt(3);
+        switch (numRandom) {
+            case 0:
+                return new Wanderer(spawnPosition[0], spawnPosition[1], 3, 1, 1.0, gameMap);
+            case 1:
+                if (projectileManager != null) {
+                    return new StaticShooter(spawnPosition[0], spawnPosition[1], 3, 1, projectileManager);
+                }
+                return new Wanderer(spawnPosition[0], spawnPosition[1], 3, 1, 1.0, gameMap);
+            case 2:
+                return new Follower(spawnPosition[0], spawnPosition[1], 3, 1, 0.5, gameMap);
+            default:
+                return null;
+        }
     }
 
     // génère plusieurs ennemis en utilisant la fonction ci‑dessus
     private void generateRandomEnemies(ProjectileManager projectileManager, GameMap gameMap) {
-        int numEnemies = 2 + (int)(Math.random() * 4); // 2 à 5 ennemis
+        Random rng = new Random();
+        int numEnemies = 2 + rng.nextInt(4); // 2 à 5 ennemis
 
         for (int i = 0; i < numEnemies; i++) {
-            Enemy enemy = generateRandomEnemy(projectileManager, gameMap);
+            Enemy enemy = generateRandomEnemy(projectileManager, gameMap, rng);
             if (enemy != null) {
                 enemies.add(enemy);
             } else {

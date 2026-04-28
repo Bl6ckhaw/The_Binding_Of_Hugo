@@ -10,7 +10,6 @@ public class Wanderer extends Enemy {
     private long lastDirectionChange = 0;
     private static final long DIRECTION_CHANGE_INTERVAL = 1_000_000_000; // 1 second in nanoseconds
     private GameMap gameMap; // Reference to the game map for collision checks
-    private static final double SIZE = 32 / 1.5; // Visual size of the enemy
     private static final double CONTACT_RANGE = 10.0; // Distance to deal damage to player
     private static final long ATTACK_COOLDOWN = 1_000_000_000; // 1 second in nanoseconds
     private long lastAttackTime = 0;
@@ -43,7 +42,7 @@ public class Wanderer extends Enemy {
             }
 
             // Check collisions before moving
-            if (CollisionSystem.canPlayerMoveTo(newX, newY, gameMap.getCurrentRoom())) {
+            if (CollisionSystem.canEnemyMoveTo(newX, newY, gameMap.getCurrentRoom())) {
                 this.x = newX;
                 this.y = newY;
             } else {
@@ -64,14 +63,12 @@ public class Wanderer extends Enemy {
     }
 
     @Override
-    public void render(GraphicsContext gc, double tileSize, double offsetX, double offsetY) {
+    public void render(GraphicsContext gc, double screenX, double screenY, double tileSize) {
         if (isAlive) {
             Color wandererColor = Color.PINK;
             gc.setFill(wandererColor);
-            double dx = offsetX + (x / MapDimensions.ROOM_PIXEL_SIZE) * (tileSize * MapDimensions.ROOM_SIZE);
-            double dy = offsetY + (y / MapDimensions.ROOM_PIXEL_SIZE) * (tileSize * MapDimensions.ROOM_SIZE);
-            double size = tileSize * 0.8; // Example: 80% of a tile
-            gc.fillOval(dx - size / 2, dy - size / 2, size, size); // Centered drawing
+            double size = tileSize * MapDimensions.ENEMY_RENDER_SCALE;
+            gc.fillOval(screenX - size / 2, screenY - size / 2, size, size);
         }
     }
 

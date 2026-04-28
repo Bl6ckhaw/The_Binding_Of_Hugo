@@ -31,7 +31,7 @@ public class Follower extends Enemy {
                 double newY = this.y + Math.sin(angle) * speed;
 
                 // Check collisions before moving
-                if (CollisionSystem.canPlayerMoveTo(newX, newY, gameMap.getCurrentRoom())) {
+                if (CollisionSystem.canEnemyMoveTo(newX, newY, gameMap.getCurrentRoom())) {
                     this.x = newX;
                     this.y = newY;
                 }
@@ -49,14 +49,12 @@ public class Follower extends Enemy {
     }
 
     @Override
-    public void render(GraphicsContext gc, double tileSize, double offsetX, double offsetY) {
+    public void render(GraphicsContext gc, double screenX, double screenY, double tileSize) {
         if (isAlive) {
-            double dx = offsetX + (getX() / MapDimensions.ROOM_PIXEL_SIZE) * (tileSize * MapDimensions.ROOM_SIZE);
-            double dy = offsetY + (getY() / MapDimensions.ROOM_PIXEL_SIZE) * (tileSize * MapDimensions.ROOM_SIZE);
-            double size = tileSize * 0.8; // Example: 80% of a tile
+            double size = tileSize * MapDimensions.ENEMY_RENDER_SCALE;
             Color followerColor = Color.PURPLE;
             gc.setFill(followerColor);
-            gc.fillOval(dx - size / 2, dy - size / 2, size, size); // Centered drawing
+            gc.fillOval(screenX - size / 2, screenY - size / 2, size, size);
         }
     }
 

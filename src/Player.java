@@ -7,21 +7,21 @@ public class Player {
     private int health;           // Current health points
     private int maxHealth;        // Maximum health points
     private int damage;           // Damage dealt by the player
-    private double speed;         // Movement speed
+    private int atkSpeed;         // Movement speed
     private boolean isAlive;      // True if the player is alive
     private double tearsSize;     // Default projectile size
     private Color projectileColor; // Color of the player's projectiles
     private int keyCount;         // Keys collected by the player
 
-    public Player(double x, double y, int maxHealth, int damage, double speed) {
+    public Player(double x, double y, int maxHealth, int damage) {
         this.x = x;
         this.y = y;
         this.maxHealth = maxHealth;
         this.health = maxHealth; // Start with full health
         this.damage = damage;
-        this.speed = speed;
+        this.atkSpeed = 0;
         this.isAlive = true; // Player is alive when created
-        this.tearsSize = 8; // Default projectile size
+        this.tearsSize = MapDimensions.DEFAULT_TEAR_SIZE; // Default projectile size
         this.projectileColor = Color.BLACK; // Default projectile color
         this.keyCount = 0; // Start with no keys
     }
@@ -53,17 +53,17 @@ public class Player {
 
     // Increases the player's damage
     public void increaseDamage() {
-        this.damage ++;
+        this.damage ++; // Increase damage by a fixed amount
     }
 
-    // Increasses the player's speed
-    public void increaseSpeed() {
-        this.speed += 0.5; // Increase speed by a fixed amount
+    // Increasses the atk speed
+    public void increaseATKSpeed() {
+        this.atkSpeed += 1_000; // Increase speed by a fixed amount
     }
 
     // Increases the player's tears size
     public void increaseTearsSize() {
-        this.tearsSize += 0.5; // Increase tears size by a fixed amount
+        this.tearsSize += 0.2; // Increase tears size by a fixed amount
     }
 
     // Sets the player's position in pixels
@@ -94,11 +94,14 @@ public class Player {
     public int getDamage() {
         return damage;
     }
-    public double getSpeed() {
-        return speed;
+    public int getATKSpeed() {
+        return atkSpeed;
     }
     public boolean isAlive() {
         return isAlive;
+    }
+    public int getCollisionSize() {
+        return MapDimensions.PLAYER_SIZE;
     }
     public double getTearsSize() {
         return tearsSize;

@@ -47,7 +47,7 @@ public class GameApp extends Application {
     
     // Cooldown for shooting
     private long lastShotTime = 0;
-    private final long SHOT_COOLDOWN = 200_000_000; // 200ms in nanoseconds
+    public static final long SHOT_COOLDOWN = 500_000_000; // 1 second in nanoseconds
 
     // Screen dimensions for fullscreen
     private final double screenWidth = Screen.getPrimary().getBounds().getWidth();
@@ -113,7 +113,7 @@ public class GameApp extends Application {
         this.uiManager = new UIManager(screenWidth, screenHeight);
 
         // Initialize player position (center of room)
-        this.player = new Player(MapDimensions.ROOM_CENTER_X, MapDimensions.ROOM_CENTER_Y, 6, 1, 1.0);
+        this.player = new Player(MapDimensions.ROOM_CENTER_X, MapDimensions.ROOM_CENTER_Y, 6, 1);
 
         // Manages all projectiles in the game
         this.projectileManager = new ProjectileManager();
@@ -191,33 +191,28 @@ public class GameApp extends Application {
                             case HEALTH -> {
                                 if (player.getHealth() < player.getMaxHealth()) {
                                     player.heal();
-                                    currentRoom.setRewards(null);
+                                    
                                 }
                             }
                             case DAMAGE -> {
                                 player.increaseDamage();
-                                currentRoom.setRewards(null);
+                                
                             }
                             case SPEED -> {
-                                player.increaseSpeed();
-                                currentRoom.setRewards(null);
+                                player.increaseATKSpeed();
+                                
                             }
                             case TEARS_SIZE -> {
                                 player.increaseTearsSize();
-                                currentRoom.setRewards(null);
+                                
                             }
                             case KEY -> {
                                 player.addKey();
-                                currentRoom.setRewards(null);
+                                
                             }
+
                         }
-                         // Remove the reward (it will no longer be displayed or collectible)
-                        
-                        // show player's stats in console
-                        System.err.println("[DEBUG] Player stats - Health: " + player.getHealth() +
-                                            ", Damage: " + player.getDamage() +
-                                            ", Speed: " + player.getSpeed() +
-                                            ", Tears Size: " + player.getTearsSize());
+                        currentRoom.setRewards(null);
                     }
                     
                 }
@@ -345,7 +340,7 @@ public class GameApp extends Application {
     // Handles shooting input and cooldown
     private void handleShooting(long now) {
         // Check cooldown
-        if (now - lastShotTime < SHOT_COOLDOWN) {
+        if (now - lastShotTime < (SHOT_COOLDOWN - player.getATKSpeed())) {
             return;
         }
 
@@ -446,8 +441,8 @@ public class GameApp extends Application {
             player.getX(),
             player.getY(),
             player.getDamage(),
-            2, // projectile speed
-            (int) player.getTearsSize(), // projectile size
+            1.5, // projectile speed
+            player.getTearsSize(), // projectile size
             shootDirection,
             ProjectileOwner.PLAYER,   // Shot by player
             ProjectileTarget.ENEMY    // Targets enemies
@@ -470,7 +465,7 @@ public class GameApp extends Application {
             case SPEED -> {
                 int speedSteps = (int) Math.round(definition.getAmount() / 0.5);
                 for (int i = 0; i < speedSteps; i++) {
-                    player.increaseSpeed();
+                    player.increaseATKSpeed();
                 }
             }
             case TEARS_SIZE -> {
@@ -480,11 +475,6 @@ public class GameApp extends Application {
                 }
             }
         }
-
-        System.err.println("[DEBUG] Player stats - Health: " + player.getHealth() +
-                           ", Damage: " + player.getDamage() +
-                           ", Speed: " + player.getSpeed() +
-                           ", Tears Size: " + player.getTearsSize());
     }
 
     private void advanceToNextLevel() {

@@ -69,7 +69,7 @@ public class UIManager {
         gc.setFill(Color.BLUE);
         gc.fillText("Damage: " + player.getDamage(), 10, 40);
         gc.setFill(Color.GREEN);
-        gc.fillText("Speed: " + player.getSpeed(), 10, 60);
+        gc.fillText("ATKSpeed: " + (GameApp.SHOT_COOLDOWN - player.getATKSpeed()) + " ns", 10, 60);
         gc.setFill(Color.PURPLE);
         gc.fillText("Tears Size: " + player.getTearsSize(), 10, 80);
     }

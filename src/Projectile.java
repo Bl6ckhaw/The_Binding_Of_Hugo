@@ -2,13 +2,13 @@ public class Projectile {
     private double x;                  // X position in pixels
     private double y;                  // Y position in pixels
     private int damage;                // Damage dealt by the projectile
-    private int speed;                 // Speed of the projectile
-    private int size;                  // Visual size (diameter) of the projectile
+    private double speed;                 // Speed of the projectile
+    private double size;                  // Visual size (diameter) of the projectile
     private Direction direction;       // Direction of movement
     private ProjectileOwner owner;     // Who fired the projectile (PLAYER or ENEMY)
     private ProjectileTarget target;   // Who is targeted (PLAYER or ENEMY)
 
-    public Projectile(double x, double y, int damage, int speed, int size, Direction direction, 
+    public Projectile(double x, double y, int damage, double speed, double size, Direction direction, 
                      ProjectileOwner owner, ProjectileTarget target){
         this.x = x;
         this.y = y;
@@ -58,10 +58,10 @@ public class Projectile {
     public int getDamage() {
         return damage;
     }
-    public int getSpeed() {
+    public double getSpeed() {
         return speed;
     }
-    public int getSize() {
+    public double getSize() {
         return size;
     }
     public Direction getDirection() {

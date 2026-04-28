@@ -25,11 +25,13 @@ public class EnemyManager {
         }
     }
 
-    // Renders all alive enemies
+    // Renders all alive enemies at transformed screen coordinates
     public void renderAll(GraphicsContext gc, double tileSize, double offsetX, double offsetY) {
         for (Enemy enemy : enemies) {
             if (enemy.isAlive()) {
-                enemy.render(gc, tileSize, offsetX, offsetY);
+                double screenX = offsetX + (enemy.getX() / MapDimensions.ROOM_PIXEL_SIZE) * (tileSize * MapDimensions.ROOM_SIZE);
+                double screenY = offsetY + (enemy.getY() / MapDimensions.ROOM_PIXEL_SIZE) * (tileSize * MapDimensions.ROOM_SIZE);
+                enemy.render(gc, screenX, screenY, tileSize);
             }
         }
     }
@@ -46,11 +48,9 @@ public class EnemyManager {
             for (Projectile projectile : projectileManager.getProjectiles()) {
                 // Only projectiles targeting enemies can hit them
                 if (projectile.getTarget() != ProjectileTarget.ENEMY) continue;
-                double distance = Math.hypot(projectile.getX() - enemy.getX(), 
-                                            projectile.getY() - enemy.getY());
-                // Collision if distance < sum of radii (with tolerance)
-                double collisionDistance = ((projectile.getSize()/2) + (21.33/2)) * 1.2;
-                if (distance < collisionDistance) {
+                if (CollisionSystem.entitiesCollide(
+                        projectile.getX(), projectile.getY(), projectile.getSize(),
+                        enemy.getX(), enemy.getY(), enemy.getCollisionSize())) {
                     enemy.takeDamage(projectile.getDamage());
                     projectileManager.markForRemoval(projectile);
                     break; // A projectile can only hit one enemy
