@@ -48,16 +48,24 @@ public class CollisionSystem {
      * Checks if an enemy can move to the given position.
      */
     public static boolean canEnemyMoveTo(double enemyX, double enemyY, Room room) {
-        // Vérifier collision avec les murs intérieurs
-        if (room.isAreaBlocked(enemyX, enemyY, ENEMY_SIZE, ENEMY_SIZE)) {
-            return false;
+        // First, check center point — if the center is inside a wall, movement is blocked.
+        if (room.isPositionBlocked(enemyX, enemyY)) return false;
+
+        // Check simple cardinal perimeter samples (N,E,S,W) to avoid corner snagging
+        // without the cost of full AABB/corner checks or many circular samples.
+        double radius = ENEMY_SIZE / 2.0 - 1.0; // small inset to be permissive
+        if (radius < 0) radius = ENEMY_SIZE / 2.0;
+        double[] sampleX = new double[] { enemyX, enemyX + radius, enemyX, enemyX - radius };
+        double[] sampleY = new double[] { enemyY - radius, enemyY, enemyY + radius, enemyY };
+        for (int i = 0; i < sampleX.length; i++) {
+            if (room.isPositionBlocked(sampleX[i], sampleY[i])) return false;
         }
 
         // Vérifier les limites de la salle (les ennemis ne peuvent pas sortir)
-        double enemyLeft = enemyX - ENEMY_SIZE / 2;
-        double enemyRight = enemyX + ENEMY_SIZE / 2;
-        double enemyTop = enemyY - ENEMY_SIZE / 2;
-        double enemyBottom = enemyY + ENEMY_SIZE / 2;
+        double enemyLeft = enemyX - ENEMY_SIZE / 2.0;
+        double enemyRight = enemyX + ENEMY_SIZE / 2.0;
+        double enemyTop = enemyY - ENEMY_SIZE / 2.0;
+        double enemyBottom = enemyY + ENEMY_SIZE / 2.0;
 
         if (enemyLeft < TILE_SIZE || enemyRight > (ROOM_SIZE - 1) * TILE_SIZE ||
             enemyTop < TILE_SIZE || enemyBottom > (ROOM_SIZE - 1) * TILE_SIZE) {

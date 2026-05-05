@@ -342,6 +342,7 @@ public class GameMap {
         };
     }
 
+    // DEBUG : map in file
     private void dumpLayoutToFile(String phase, int targetRooms, int roomsCount) {
         StringBuilder sb = new StringBuilder();
         sb.append("phase=").append(phase).append("\n");
@@ -665,6 +666,18 @@ public class GameMap {
         }
         
         return new int[]{spawnX, spawnY};
+    }
+
+    // check the tile : wall = false, floor = true
+    public boolean isWalkable(int targetX, int targetY) {
+        Room room = getCurrentRoom();
+        if (room == null) return false;
+        for (Wall wall : room.getWalls()) {
+            if (wall.blocksPosition(targetX, targetY)) {
+                return false;
+            }
+        }
+        return true;  
     }
 
     // Returns the current room object

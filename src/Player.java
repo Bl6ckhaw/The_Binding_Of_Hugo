@@ -1,5 +1,6 @@
 
 import java.awt.Color;
+import javafx.geometry.Point2D;
 
 public class Player {
     private double x;             // Player's x position in pixels
@@ -10,7 +11,7 @@ public class Player {
     private int atkSpeed;         // Movement speed
     private boolean isAlive;      // True if the player is alive
     private double tearsSize;     // Default projectile size
-    private Color projectileColor; // Color of the player's projectiles
+    private final Color projectileColor; // Color of the player's projectiles
     private int keyCount;         // Keys collected by the player
 
     public Player(double x, double y, int maxHealth, int damage) {
@@ -24,6 +25,13 @@ public class Player {
         this.tearsSize = MapDimensions.DEFAULT_TEAR_SIZE; // Default projectile size
         this.projectileColor = Color.BLACK; // Default projectile color
         this.keyCount = 0; // Start with no keys
+    }
+
+    // Convert Position to Tile
+    public Point2D getTilePosition() {
+        int tileX = (int) (x / MapDimensions.TILE_SIZE);
+        int tileY = (int) (y / MapDimensions.TILE_SIZE);
+        return new Point2D(tileX, tileY);
     }
 
     // Applies damage to the player and updates alive state
